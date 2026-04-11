@@ -689,7 +689,7 @@ async function loadEntries(){
   const {data}=await sb.from('devotionals').select('*').order('entry_date',{ascending:false});
   entries=data||[];
   renderGrid();
-  if(entries.length>0) loadEntry(entries[0]);
+  if(entries.length>0) loadEntry(entries[0], false);
 }
 
 function renderGrid(){
@@ -726,7 +726,7 @@ function highlightCard(id) {
 }
 
 // ── LOAD ENTRY ──
-function loadEntry(entry){
+function loadEntry(entry, autoplay=true){
   if(!entry) return;
   current=entry;
 
@@ -754,8 +754,11 @@ function loadEntry(entry){
 
   if(entry.audio_url){
     audio.src=entry.audio_url; audio.load();
-    initAudio();
-    audio.play(); setPlay(true);
+    if(autoplay){
+      initAudio();
+      audio.play().catch(()=>{ setPlay(false); });
+      setPlay(true);
+    }
   } else setPlay(false);
 
   showView('archive');

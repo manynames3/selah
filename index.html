@@ -249,6 +249,7 @@ body.admin-mode .a-delete{display:flex;}
 .empty-state p{font-family:'Libre Baskerville',serif;font-style:italic;font-size:1.1rem;color:var(--readable);}
 #toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(3rem);background:var(--amber);color:#1c1108;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.2em;padding:.65rem 2rem;z-index:9999;pointer-events:none;transition:transform .35s cubic-bezier(.22,1,.36,1);white-space:nowrap;box-shadow:0 4px 20px rgba(232,168,50,.4);}
 #toast.show{transform:translateX(-50%) translateY(0);}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
@@ -333,7 +334,7 @@ body.admin-mode .a-delete{display:flex;}
 
     <div class="s-div"><span>All Recordings — Recent First</span></div>
     <div class="archive-grid" id="archiveGrid">
-      <div class="empty-state"><div class="g">✦</div><p>No entries yet.</p></div>
+      <div class="empty-state" id="loadingState"><div class="g" style="animation:spin 1.5s linear infinite;display:inline-block">✦</div><p>Loading songs…</p></div>
     </div>
   </div>
 
@@ -601,11 +602,23 @@ function showView(name) {
 }
 
 // ── LOAD ENTRIES ──
-async function loadEntries() {
-  var res = await sb.from('devotionals').select('*').order('entry_date', {ascending:false});
-  entries = res.data || [];
-  renderGrid();
-  if (entries.length > 0) loadEntry(entries[0], false);
+async function loadEntries(retries) {
+  if (retries === undefined) retries = 3;
+  try {
+    var res = await sb.from('devotionals').select('*').order('entry_date', {ascending:false});
+    if (res.error) throw res.error;
+    entries = res.data || [];
+    renderGrid();
+    if (entries.length > 0) loadEntry(entries[0], false);
+  } catch(e) {
+    console.warn('loadEntries failed:', e);
+    if (retries > 0) {
+      setTimeout(function(){ loadEntries(retries - 1); }, 1500);
+    } else {
+      document.getElementById('archiveGrid').innerHTML =
+        '<div class="empty-state"><div class="g">✦</div><p>No entries yet.</p></div>';
+    }
+  }
 }
 
 function renderGrid() {

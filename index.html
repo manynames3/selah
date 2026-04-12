@@ -603,20 +603,30 @@ function showView(name) {
 
 // ── LOAD ENTRIES ──
 async function loadEntries(retries) {
-  if (retries === undefined) retries = 3;
+  if (retries === undefined) retries = 4;
   try {
-    var res = await sb.from('devotionals').select('*').order('entry_date', {ascending:false});
+    // Race the Supabase query against a 6-second timeout
+    // This handles cold-start hangs on the free tier
+    var res = await Promise.race([
+      sb.from('devotionals').select('*').order('entry_date', {ascending:false}),
+      new Promise(function(_, reject){
+        setTimeout(function(){ reject(new Error('timeout')); }, 6000);
+      })
+    ]);
     if (res.error) throw res.error;
     entries = res.data || [];
     renderGrid();
     if (entries.length > 0) loadEntry(entries[0], false);
   } catch(e) {
-    console.warn('loadEntries failed:', e);
+    console.warn('loadEntries attempt failed:', e.message);
     if (retries > 0) {
-      setTimeout(function(){ loadEntries(retries - 1); }, 1500);
+      // Show retry count so user knows it's trying
+      var grid = document.getElementById('archiveGrid');
+      if (grid) grid.innerHTML = '<div class="empty-state"><div class="g" style="animation:spin 1.5s linear infinite;display:inline-block">✦</div><p style="font-size:.85rem">Connecting… ('+(5-retries)+'/4)</p></div>';
+      setTimeout(function(){ loadEntries(retries - 1); }, 2000);
     } else {
-      document.getElementById('archiveGrid').innerHTML =
-        '<div class="empty-state"><div class="g">✦</div><p>No entries yet.</p></div>';
+      var grid = document.getElementById('archiveGrid');
+      if (grid) grid.innerHTML = '<div class="empty-state"><div class="g">✦</div><p>Could not load. <span style="color:var(--amber);cursor:pointer;text-decoration:underline" onclick="loadEntries()">Tap to retry</span></p></div>';
     }
   }
 }

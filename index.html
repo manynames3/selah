@@ -49,8 +49,6 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .logo-glyph{width:34px;height:34px;border:1.5px solid var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--amber);font-size:.9rem;flex-shrink:0;}
 .logo-name{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.12em;color:var(--warm-white);line-height:1;}
 .logo-sub{font-size:.68rem;font-weight:700;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;margin-top:.1rem;}
-.tod-greeting{font-family:'Libre Baskerville',serif;font-style:italic;font-size:.78rem;color:var(--muted);margin-left:auto;padding-right:1.5rem;display:none;}
-@media(min-width:600px){.tod-greeting{display:block;}}
 .header-right{display:flex;align-items:center;gap:.75rem;}
 .admin-badge{display:none;align-items:center;gap:.4rem;font-size:.68rem;font-weight:700;color:var(--amber);letter-spacing:.08em;}
 .admin-badge.show{display:flex;}
@@ -63,7 +61,6 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 button:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 @media(max-width:760px){
   header{padding:1rem 1rem 1.1rem;flex-wrap:wrap;gap:.75rem;}
-  .tod-greeting{order:3;width:100%;margin-left:0;padding-right:0;}
   .header-right{width:100%;justify-content:space-between;}
 }
 
@@ -103,15 +100,16 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 
 /* PLAYER INFO */
 .player-info{display:flex;flex-direction:column;gap:1rem;}
-.p-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);}
-.p-title{font-family:'Libre Baskerville',serif;font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:var(--warm-white);line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+.player-copy{display:flex;flex-direction:column;gap:.35rem;}
+.p-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin:0;}
+.p-title{font-family:'Libre Baskerville',serif;font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:var(--warm-white);line-height:1.04;text-shadow:0 2px 12px rgba(0,0,0,.6);margin:0;}
 .p-title em{font-style:italic;color:var(--amber);}
-.p-scripture{font-family:'Libre Baskerville',serif;font-style:italic;font-size:.85rem;color:var(--readable);line-height:1.5;}
+.p-scripture{font-family:'Libre Baskerville',serif;font-style:italic;font-size:.85rem;color:var(--readable);line-height:1.38;margin:0;}
 
 /* WAVEFORM */
-.waveform-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.45rem;}
+.waveform-head{display:flex;align-items:center;justify-content:flex-end;gap:1rem;margin-bottom:.45rem;}
 .waveform-label{font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:.22em;color:var(--amber);}
-.waveform-hint{font-size:.72rem;font-weight:700;color:var(--muted);}
+.waveform-hint{font-size:.72rem;font-weight:700;color:var(--muted);text-align:right;}
 .waveform-wrap{cursor:pointer;user-select:none;}
 .waveform-container svg{display:block;width:100%;}
 .waveform-time{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;color:var(--readable);margin-top:.4rem;letter-spacing:.06em;}
@@ -167,9 +165,9 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 .a-thumb{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(232,168,50,.2);}
 .a-art{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;}
 .a-art-ph{width:100%;height:100%;background:radial-gradient(circle at 35% 35%,#3a2218,#0d0b08);display:flex;align-items:center;justify-content:center;color:var(--amber-dim);font-size:.9rem;}
-.a-info{min-width:0;}
+.a-info{min-width:0;display:flex;flex-direction:column;gap:.22rem;}
 .a-title{font-family:'Libre Baskerville',serif;font-size:.96rem;font-weight:700;color:var(--warm-white);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.a-meta{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-top:.2rem;}
+.a-meta{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-top:0;}
 .a-date{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);}
 .a-status{display:none;font-size:.58rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:.18rem .42rem;border-radius:999px;background:rgba(232,168,50,.16);color:var(--amber);}
 .a-ref{font-size:.68rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -304,11 +302,10 @@ body.admin-mode .a-delete{display:flex;}
   <div class="logo-wrap">
     <div class="logo-glyph">✦</div>
     <div>
-      <div class="logo-name">Secret Place</div>
+      <div class="logo-name">SELAH</div>
       <div class="logo-sub">Daily Devotional Songs</div>
     </div>
   </div>
-  <span class="tod-greeting" id="todGreeting"></span>
   <div class="header-right">
     <div class="admin-badge" id="adminBadge"><div class="admin-dot"></div><span>Admin</span></div>
     <nav class="header-nav">
@@ -346,13 +343,12 @@ body.admin-mode .a-delete{display:flex;}
       </div>
 
       <div class="player-info">
-        <div>
+        <div class="player-copy">
           <div class="p-eyebrow" id="pEyebrow">Select a recording below</div>
           <h2 class="p-title" id="pTitle">Songs from the <em>Secret Place</em></h2>
           <p class="p-scripture" id="pScripture">One song. One scripture. Every day.</p>
         </div>
         <div class="waveform-head">
-          <span class="waveform-label">Waveform Seek</span>
           <span class="waveform-hint" id="waveformHint">Tap anywhere on the waveform to jump through the song</span>
         </div>
         <div class="waveform-wrap" onclick="seekFromWaveform(event)" title="Tap the waveform to seek within the current song">
@@ -361,8 +357,8 @@ body.admin-mode .a-delete{display:flex;}
         </div>
         <div class="ctrl-stack">
           <div class="transport-row">
-            <button class="transport-btn" onclick="skipBack()" title="Restart the current song">
-              <span class="ctrl-icon">↺</span><span class="ctrl-text">Restart</span>
+            <button class="transport-btn" onclick="rewind15()" title="Rewind 15 seconds">
+              <span class="ctrl-icon">-15</span><span class="ctrl-text">Rewind</span>
             </button>
             <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Play song" title="Play or pause the current song">▶</button>
             <button class="transport-btn" onclick="skipFwd()" title="Skip forward 15 seconds">
@@ -534,15 +530,14 @@ loadEntries();
 // ── TIME OF DAY ──
 function applyTimeOfDay() {
   var h = new Date().getHours();
-  var tint, alpha, greeting;
-  if (h >= 5 && h < 8)       { tint='255,180,130'; alpha=.18; greeting='Good morning. A new day of praise.'; }
-  else if (h >= 8 && h < 17) { tint='255,200,110'; alpha=.14; greeting='Songs for the afternoon quiet.'; }
-  else if (h >= 17 && h < 20){ tint='255,140,40';  alpha=.28; greeting='Golden hour. Come and rest.'; }
-  else                        { tint='255,170,55';  alpha=.22; greeting='Still of the night. Just you and Him.'; }
+  var tint, alpha;
+  if (h >= 5 && h < 8)       { tint='255,180,130'; alpha=.18; }
+  else if (h >= 8 && h < 17) { tint='255,200,110'; alpha=.14; }
+  else if (h >= 17 && h < 20){ tint='255,140,40';  alpha=.28; }
+  else                        { tint='255,170,55';  alpha=.22; }
   document.getElementById('roomBg').style.background =
     'radial-gradient(ellipse 60% 40% at 50% -5%,rgba('+tint+','+alpha+') 0%,transparent 70%),' +
     'radial-gradient(ellipse 80% 80% at 50% 50%,rgba(42,26,8,.3) 0%,rgba(12,7,2,.88) 100%)';
-  document.getElementById('todGreeting').textContent = greeting;
 }
 
 // ── SHELF ──
@@ -878,7 +873,7 @@ function togglePlay() {
     syncPlaybackUI();
   }
 }
-function skipBack() { audio.currentTime = 0; syncPlaybackUI(); }
+function rewind15() { audio.currentTime = Math.max(0, (audio.currentTime || 0) - 15); syncPlaybackUI(); }
 function skipFwd()  { audio.currentTime = Math.min(audio.duration||0, audio.currentTime+15); syncPlaybackUI(); }
 function toggleLoop() {
   loopOn = !loopOn; audio.loop = loopOn;

@@ -91,11 +91,10 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 .art-center img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .art-ph{width:100%;height:100%;background:radial-gradient(circle at 40% 35%,#3a2818,#0e0c09);display:flex;align-items:center;justify-content:center;color:var(--amber-dim);font-size:1.4rem;}
 .spindle{width:7px;height:7px;border-radius:50%;position:absolute;z-index:6;background:radial-gradient(circle at 40% 35%,#6a6a6a,#1a1a1a);}
-.tonearm-wrap{position:absolute;top:-10px;right:-10px;width:64px;height:88px;pointer-events:none;z-index:7;}
+.tonearm-wrap{position:absolute;top:-10px;right:-10px;width:82px;height:122px;pointer-events:none;z-index:7;}
 .tonearm-pivot{position:absolute;top:3px;right:6px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#888,#2a2a2a);}
-.tonearm-arm{position:absolute;top:9px;right:10px;width:4px;height:70px;background:linear-gradient(to bottom,#999,#555);border-radius:3px;transform-origin:50% 6px;transform:rotate(-10deg);transition:transform 1.2s cubic-bezier(.4,0,.2,1);}
-.tonearm-arm::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:7px;height:7px;background:#999;border-radius:1px;}
-.is-playing .tonearm-arm{transform:rotate(-28deg);}
+.tonearm-arm{position:absolute;top:9px;right:10px;width:4px;height:104px;background:linear-gradient(to bottom,#999,#555);border-radius:3px;transform-origin:50% 6px;transform:rotate(var(--tonearm-angle,6deg));transition:transform .24s linear;}
+.tonearm-arm::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:8px;height:9px;background:#999;border-radius:1px;}
 .np-row{position:absolute;bottom:-1.2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.4rem;opacity:0;transition:opacity .4s;white-space:nowrap;}
 .is-playing .np-row{opacity:1;}
 .np-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:npulse 1.1s ease infinite;}
@@ -512,6 +511,9 @@ const DEVOTIONALS_REST_URL = SUPABASE_URL + '/rest/v1/devotionals?select=*&order
 // ── STATE ──
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 const audio = document.getElementById('audioEl');
+const TONEARM_REST_ANGLE = 6;
+const TONEARM_START_ANGLE = 9;
+const TONEARM_END_ANGLE = 36;
 let entries = [], current = null, playing = false, isAdmin = false, pendingDeleteId = null, loopOn = false;
 // Web Audio vars removed — using simulated visualizer
 let waveformBars = [], waveformW = 0;
@@ -657,6 +659,15 @@ function updateWaveform(pct) {
   var r = document.getElementById('wClipRect');
   if (r) r.setAttribute('width', (pct*waveformW).toFixed(2));
 }
+function updateTonearm(progress, hasTrack) {
+  var arm = document.getElementById('tonearmArm');
+  if (!arm) return;
+  var pct = Math.max(0, Math.min(1, progress || 0));
+  var angle = hasTrack
+    ? TONEARM_START_ANGLE + (TONEARM_END_ANGLE - TONEARM_START_ANGLE) * pct
+    : TONEARM_REST_ANGLE;
+  arm.style.setProperty('--tonearm-angle', angle.toFixed(2) + 'deg');
+}
 function syncPlaybackUI() {
   var hasTrack = !!(current && current.audio_url && audio.currentSrc);
   var pct = audio.duration ? audio.currentTime / audio.duration : 0;
@@ -669,6 +680,7 @@ function syncPlaybackUI() {
   document.getElementById('tNow').textContent = fmt(audio.currentTime || 0);
   document.getElementById('tTot').textContent = fmt(audio.duration || 0);
   updateWaveform(pct);
+  updateTonearm(pct, hasTrack);
 }
 function seekFromWaveform(e) {
   if (!audio.duration) return;
@@ -866,8 +878,8 @@ function togglePlay() {
     syncPlaybackUI();
   }
 }
-function skipBack() { audio.currentTime = 0; }
-function skipFwd()  { audio.currentTime = Math.min(audio.duration||0, audio.currentTime+15); }
+function skipBack() { audio.currentTime = 0; syncPlaybackUI(); }
+function skipFwd()  { audio.currentTime = Math.min(audio.duration||0, audio.currentTime+15); syncPlaybackUI(); }
 function toggleLoop() {
   loopOn = !loopOn; audio.loop = loopOn;
   document.getElementById('loopBtn').classList.toggle('active', loopOn);

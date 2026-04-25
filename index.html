@@ -230,6 +230,13 @@ body.admin-mode .a-delete{display:flex;}
 .admin-wrap{max-width:560px;margin:3rem auto 0;}
 .admin-h{font-family:'Libre Baskerville',serif;font-size:2rem;font-weight:700;color:var(--warm-white);margin-bottom:.35rem;}
 .admin-sub{font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:2.5rem;}
+.edit-shell{display:none;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.15rem;margin-bottom:1.4rem;border:1.5px solid rgba(232,168,50,.22);background:linear-gradient(135deg,rgba(232,168,50,.08),rgba(255,255,255,.03));}
+.edit-shell.show{display:flex;}
+.edit-copy{min-width:0;}
+.edit-kicker{font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:.3rem;}
+.edit-title{font-family:'Libre Baskerville',serif;font-size:1rem;font-weight:700;color:var(--warm-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.edit-cancel{flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:.84rem;letter-spacing:.18em;padding:.55rem .95rem;background:transparent;border:1.5px solid rgba(253,243,224,.18);color:var(--readable);cursor:pointer;transition:all .2s;}
+.edit-cancel:hover{border-color:var(--amber);color:var(--amber);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 @media(max-width:540px){.form-row{grid-template-columns:1fr;}}
 .field{margin-bottom:1.4rem;}
@@ -278,13 +285,32 @@ body.admin-mode .a-delete{display:flex;}
 .extracted-art-wrap.show{display:flex;}
 .extracted-art-wrap img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--amber);}
 .extracted-art-label{font-size:.72rem;font-weight:700;color:var(--amber);}
+.admin-library{margin-top:2.6rem;padding-top:2rem;border-top:1px solid rgba(232,168,50,.14);}
+.admin-library-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1rem;}
+.admin-library-title{font-family:'Libre Baskerville',serif;font-size:1.25rem;font-weight:700;color:var(--warm-white);}
+.admin-library-sub{font-size:.74rem;font-weight:700;letter-spacing:.08em;color:var(--muted);}
+.admin-entry-list{display:grid;gap:.8rem;}
+.admin-entry-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.9rem;align-items:center;padding:1rem 1.05rem;border:1px solid rgba(232,168,50,.16);background:linear-gradient(120deg,rgba(58,35,16,.95),rgba(34,21,10,.95));}
+.admin-entry-card.is-editing{border-color:rgba(232,168,50,.5);box-shadow:0 0 0 1px rgba(232,168,50,.22) inset;}
+.admin-entry-main{min-width:0;}
+.admin-entry-title{font-family:'Libre Baskerville',serif;font-size:1rem;font-weight:700;color:var(--warm-white);margin-bottom:.32rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-entry-meta{display:flex;flex-wrap:wrap;gap:.55rem .9rem;font-size:.75rem;font-weight:700;color:var(--muted);}
+.admin-entry-meta strong{color:var(--readable);font-weight:700;}
+.admin-entry-actions{display:flex;gap:.55rem;flex-shrink:0;}
+.admin-entry-btn{font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:.16em;padding:.55rem .9rem;border:1.5px solid rgba(232,168,50,.22);background:transparent;color:var(--readable);cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.admin-entry-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(232,168,50,.06);}
+.admin-entry-btn.danger{border-color:rgba(232,84,50,.38);color:#ff9b84;}
+.admin-entry-btn.danger:hover{background:rgba(232,84,50,.12);border-color:#e85432;color:#ff8060;}
+.admin-entry-empty{padding:1.4rem 1rem;border:1px dashed rgba(232,168,50,.18);text-align:center;font-size:.86rem;color:var(--muted);}
+.field-note{display:none;margin-top:.55rem;font-size:.72rem;font-weight:700;color:var(--muted);}
+.field-note.show{display:block;}
 .gate-wrap{max-width:380px;margin:5rem auto;text-align:center;}
 .gate-wrap h2{font-family:'Libre Baskerville',serif;font-size:2.1rem;font-weight:700;color:var(--warm-white);margin-bottom:.4rem;}
 .gate-wrap p{font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:2rem;}
 .empty-state{text-align:center;padding:3rem 2rem;}
 .empty-state .g{font-size:2.5rem;margin-bottom:1rem;color:var(--amber-dim);}
 .empty-state p{font-family:'Libre Baskerville',serif;font-style:italic;font-size:1.1rem;color:var(--readable);}
-#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(3rem);background:var(--amber);color:#1c1108;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.2em;padding:.65rem 2rem;z-index:9999;pointer-events:none;transition:transform .35s cubic-bezier(.22,1,.36,1);white-space:nowrap;box-shadow:0 4px 20px rgba(232,168,50,.4);}
+#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom, 0px));transform:translateX(-50%) translateY(3rem);max-width:min(92vw,34rem);width:max-content;background:var(--amber);color:#1c1108;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.2em;line-height:1.35;text-align:center;padding:.8rem 1.2rem;z-index:9999;pointer-events:none;transition:transform .35s cubic-bezier(.22,1,.36,1);white-space:normal;word-break:break-word;box-shadow:0 4px 20px rgba(232,168,50,.4);}
 #toast.show{transform:translateX(-50%) translateY(0);}
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 </style>
@@ -418,6 +444,13 @@ body.admin-mode .a-delete{display:flex;}
     <div class="admin-wrap">
       <h2 class="admin-h">Upload Today's Song</h2>
       <p class="admin-sub">Add a new devotional — drop your MP3 and fill in the details.</p>
+      <div class="edit-shell" id="editShell">
+        <div class="edit-copy">
+          <div class="edit-kicker">Editing Existing Entry</div>
+          <div class="edit-title" id="editTitle">Song title</div>
+        </div>
+        <button class="edit-cancel" type="button" onclick="cancelEdit()">Cancel Edit</button>
+      </div>
       <div class="form-row">
         <div class="field"><label>Song Title</label><input type="text" id="uTitle" placeholder="e.g. Still Waters"/></div>
         <div class="field"><label>Entry Date</label><input type="date" id="uDate"/></div>
@@ -433,6 +466,7 @@ body.admin-mode .a-delete{display:flex;}
           <div class="drop-zone-text">Drop your MP3 here or <span>browse</span></div>
           <div class="drop-zone-filename" id="audioFilename"></div>
         </div>
+        <div class="field-note" id="audioFieldNote"></div>
         <!-- extracted artwork preview -->
         <div class="extracted-art-wrap" id="extractedArtWrap">
           <img id="extractedArtImg"/>
@@ -445,6 +479,14 @@ body.admin-mode .a-delete{display:flex;}
       </div>
       <button class="submit-btn" id="submitBtn" onclick="handleUpload()">Publish Song</button>
       <p class="up-status" id="upStatus"></p>
+
+      <div class="admin-library">
+        <div class="admin-library-head">
+          <div class="admin-library-title">Existing Songs</div>
+          <div class="admin-library-sub">Edit metadata or delete published entries.</div>
+        </div>
+        <div class="admin-entry-list" id="adminEntryList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -452,7 +494,6 @@ body.admin-mode .a-delete{display:flex;}
 <!-- LYRICS MODAL -->
 <div class="modal-backdrop" id="modalBg" onclick="closeModalBg(event)">
   <div class="lyrics-modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-art-header">
       <img id="mArtImg" style="display:none"/>
       <div class="modal-art-overlay"></div>
@@ -510,6 +551,7 @@ const AUDIO_UPLOAD_URL = '/api/upload-audio';
 const ART_UPLOAD_URL = '/api/upload-art';
 const AUDIO_DELETE_URL = '/api/delete-audio';
 const ENTRY_CREATE_URL = '/api/admin-entry-create';
+const ENTRY_UPDATE_URL = '/api/admin-entry-update';
 const ENTRY_DELETE_URL = '/api/admin-entry-delete';
 
 // ── STATE ──
@@ -518,11 +560,12 @@ const audio = document.getElementById('audioEl');
 const TONEARM_REST_ANGLE = 6;
 const TONEARM_START_ANGLE = 9;
 const TONEARM_END_ANGLE = 36;
-let entries = [], current = null, playing = false, isAdmin = false, pendingDeleteId = null, loopOn = false;
+let entries = [], current = null, playing = false, isAdmin = false, pendingDeleteId = null, loopOn = false, editingEntryId = null;
 // Web Audio vars removed — using simulated visualizer
 let waveformBars = [], waveformW = 0;
 let entriesLoaded = false;
 let previousVolume = 0.85;
+let toastTimer = null;
 
 // ── INIT ──
 document.getElementById('uDate').valueAsDate = new Date();
@@ -813,7 +856,83 @@ function updateArchiveMeta() {
     focus.textContent = 'Choose a song below to start listening, or reopen the latest one from the archive.';
   }
 }
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeSingleQuotedJs(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+function sortEntries() {
+  entries.sort(function(a, b) {
+    return new Date(b.entry_date).getTime() - new Date(a.entry_date).getTime();
+  });
+}
+function upsertLocalEntry(entry) {
+  if (!entry || !entry.id) return;
+  var idx = entries.findIndex(function(item) { return item.id === entry.id; });
+  if (idx > -1) entries[idx] = entry;
+  else entries.unshift(entry);
+  sortEntries();
+  entriesLoaded = true;
+}
+function removeLocalEntry(id) {
+  entries = entries.filter(function(entry) { return entry.id !== id; });
+}
+function resetPlayerState() {
+  audio.pause(); audio.removeAttribute('src'); audio.load(); current = null;
+  document.getElementById('pEyebrow').textContent = 'Select a recording below';
+  document.getElementById('pTitle').innerHTML = 'Songs from the <em>Secret Place</em>';
+  document.getElementById('pScripture').textContent = 'One song. One scripture. Every day.';
+  document.getElementById('artImg').style.display = 'none';
+  document.getElementById('artPh').style.display = 'flex';
+  document.getElementById('waveformContainer').innerHTML = '';
+  document.getElementById('tNow').textContent = '0:00';
+  document.getElementById('tTot').textContent = '0:00';
+  syncPlaybackUI();
+  updateArchiveMeta();
+}
+function updateSubmitMode() {
+  var submitBtn = document.getElementById('submitBtn');
+  submitBtn.textContent = editingEntryId ? 'Save Changes' : 'Publish Song';
+}
+function updateAudioFieldNote(text) {
+  var note = document.getElementById('audioFieldNote');
+  note.textContent = text || '';
+  note.classList.toggle('show', !!text);
+}
+function resetSelectedAudio() {
+  document.getElementById('uAudio').value = '';
+  document.getElementById('audioDrop')._selectedFile = null;
+  document.getElementById('audioFilename').textContent = '';
+  document.getElementById('audioFilename').classList.remove('show');
+  document.getElementById('extractedArtWrap').classList.remove('show');
+  extractedArtBlob = null;
+}
+function resetUploadForm() {
+  ['uTitle','uScripture','uLyrics','gatePw'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('uDate').valueAsDate = new Date();
+  document.getElementById('upStatus').textContent = '';
+  resetSelectedAudio();
+  updateAudioFieldNote('');
+}
+function cancelEdit() {
+  editingEntryId = null;
+  document.getElementById('editShell').classList.remove('show');
+  document.getElementById('editTitle').textContent = '';
+  resetUploadForm();
+  updateSubmitMode();
+  renderAdminEntryList();
+}
 function openAdminArea() {
+  if (isAdmin && !entriesLoaded) loadEntries();
   showView(isAdmin ? 'admin-upload' : 'admin-gate');
 }
 
@@ -829,6 +948,7 @@ function showView(name) {
   if (name==='archive') document.querySelectorAll('.hn-btn')[0].classList.add('active');
   document.getElementById('adminNavBtn').classList.toggle('active', name.startsWith('admin'));
   if (name === 'archive' && !entriesLoaded) loadEntries();
+  if (name === 'admin-upload') renderAdminEntryList();
 }
 
 // ── LOAD ENTRIES ──
@@ -875,7 +995,9 @@ async function loadEntries(retries) {
     ]);
     entries = Array.isArray(data) ? data : [];
     entriesLoaded = true;
+    sortEntries();
     renderGrid();
+    renderAdminEntryList();
     updateArchiveMeta();
     if (entries.length > 0) {
       var target = current ? entries.find(function(e){ return e.id === current.id; }) : null;
@@ -913,12 +1035,39 @@ function renderGrid() {
                           : '<div class="a-thumb"><div class="a-art-ph">✦</div></div>';
     return '<div class="a-card" id="card-'+e.id+'" onclick="loadEntry(entries.find(function(x){return x.id===\''+e.id+'\'}))">' +
       thumb +
-      '<div class="a-info"><div class="a-title">'+e.title+'</div><div class="a-meta"><div class="a-date">'+lbl+'</div><div class="a-status">Now Playing</div></div><div class="a-ref">'+(e.scripture||'')+'</div></div>' +
-      '<div class="a-actions"><div class="a-play">▶</div>' +
-      '<button class="a-delete" onclick="openDeleteModal(\''+e.id+'\',\''+e.title.replace(/'/g,"\\'")+'\'  ,event)">✕</button></div>' +
+      '<div class="a-info"><div class="a-title">'+escapeHtml(e.title)+'</div><div class="a-meta"><div class="a-date">'+lbl+'</div><div class="a-status">Now Playing</div></div><div class="a-ref">'+escapeHtml(e.scripture||'')+'</div></div>' +
+      '<div class="a-actions"><div class="a-play">▶</div></div>' +
       '</div>';
   }).join('');
   updateArchiveMeta();
+}
+function renderAdminEntryList() {
+  var list = document.getElementById('adminEntryList');
+  if (!list) return;
+  if (!entriesLoaded) {
+    list.innerHTML = '<div class="admin-entry-empty">Loading entries…</div>';
+    return;
+  }
+  if (!entries.length) {
+    list.innerHTML = '<div class="admin-entry-empty">No published entries yet.</div>';
+    return;
+  }
+  list.innerHTML = entries.map(function(entry) {
+    var date = new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    var scripture = entry.scripture ? '<span><strong>Key</strong> ' + escapeHtml(entry.scripture) + '</span>' : '';
+    var audioLabel = entry.audio_url ? 'Audio ready' : 'No audio';
+    var isEditing = editingEntryId === entry.id;
+    return '<div class="admin-entry-card' + (isEditing ? ' is-editing' : '') + '">' +
+      '<div class="admin-entry-main">' +
+        '<div class="admin-entry-title">' + escapeHtml(entry.title) + '</div>' +
+        '<div class="admin-entry-meta"><span><strong>Date</strong> ' + date + '</span>' + scripture + '<span><strong>Media</strong> ' + audioLabel + '</span></div>' +
+      '</div>' +
+      '<div class="admin-entry-actions">' +
+        '<button class="admin-entry-btn" type="button" onclick="beginEditEntry(\'' + escapeSingleQuotedJs(entry.id) + '\')">Edit</button>' +
+        '<button class="admin-entry-btn danger" type="button" onclick="openDeleteModal(\'' + escapeSingleQuotedJs(entry.id) + '\',\'' + escapeSingleQuotedJs(entry.title) + '\',event)">Delete</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function highlightCard(id) {
@@ -934,7 +1083,7 @@ function loadEntry(entry, autoplay) {
   current = entry;
   var d = new Date(entry.entry_date+'T12:00:00');
   document.getElementById('pEyebrow').textContent = d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('pTitle').innerHTML = '<em>'+entry.title+'</em>';
+  document.getElementById('pTitle').innerHTML = '<em>'+escapeHtml(entry.title)+'</em>';
   document.getElementById('pScripture').textContent = entry.scripture||'';
   var img = document.getElementById('artImg'), ph = document.getElementById('artPh');
   if (entry.art_url) {
@@ -1071,6 +1220,22 @@ async function checkGate() {
     button.disabled = false;
   }
 }
+function beginEditEntry(id) {
+  var entry = entries.find(function(item) { return item.id === id; });
+  if (!entry) return;
+  editingEntryId = entry.id;
+  document.getElementById('uTitle').value = entry.title || '';
+  document.getElementById('uDate').value = entry.entry_date || '';
+  document.getElementById('uScripture').value = entry.scripture || '';
+  document.getElementById('uLyrics').value = entry.lyrics || '';
+  document.getElementById('editTitle').textContent = entry.title || 'Untitled';
+  document.getElementById('editShell').classList.add('show');
+  updateSubmitMode();
+  resetSelectedAudio();
+  updateAudioFieldNote(entry.audio_url ? 'Leave audio empty to keep the existing file. Choose a new MP3 only if you want to replace it.' : 'No audio file is attached yet. Add one now if needed.');
+  renderAdminEntryList();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 // ── DELETE ──
 function openDeleteModal(id, title, e) {
@@ -1101,25 +1266,22 @@ function closeDeleteModal() {
 }
 async function executeDelete() {
   if (!pendingDeleteId) return;
+  var deletingId = pendingDeleteId;
   var btn = document.querySelector('#delRow2 .del-confirm');
   btn.textContent='Deleting…'; btn.disabled=true;
   try {
-    await requestJson(ENTRY_DELETE_URL, {id: pendingDeleteId});
-    closeDeleteModal(); toast('Deleted');
-    if (current && current.id===pendingDeleteId) {
-      audio.pause(); audio.removeAttribute('src'); audio.load(); current=null;
-      document.getElementById('pEyebrow').textContent='Select a recording below';
-      document.getElementById('pTitle').innerHTML='Songs from the <em>Secret Place</em>';
-      document.getElementById('pScripture').textContent='One song. One scripture. Every day.';
-      document.getElementById('artImg').style.display='none';
-      document.getElementById('artPh').style.display='flex';
-      document.getElementById('waveformContainer').innerHTML='';
-      document.getElementById('tNow').textContent='0:00';
-      document.getElementById('tTot').textContent='0:00';
-      updateArchiveMeta();
-      syncPlaybackUI();
+    await requestJson(ENTRY_DELETE_URL, {id: deletingId});
+    closeDeleteModal();
+    if (editingEntryId === deletingId) cancelEdit();
+    removeLocalEntry(deletingId);
+    renderGrid();
+    renderAdminEntryList();
+    if (current && current.id === deletingId) {
+      if (entries.length) loadEntry(entries[0], false);
+      else resetPlayerState();
     }
-    await loadEntries();
+    toast('Deleted');
+    loadEntries();
   } catch (err) {
     if (String(err.message || '').indexOf('unauthorized') > -1) handleAdminUnauthorized();
     toast('Delete failed');
@@ -1192,13 +1354,19 @@ async function handleUpload() {
   var audioFile= document.getElementById('audioDrop')._selectedFile || (inputEl.files && inputEl.files[0]);
   if (!title||!date) { toast('Title and date required'); return; }
   var btn=document.getElementById('submitBtn'), status=document.getElementById('upStatus');
+  var editingEntry = editingEntryId ? entries.find(function(entry) { return entry.id === editingEntryId; }) : null;
+  var saveUrl = editingEntry ? ENTRY_UPDATE_URL : ENTRY_CREATE_URL;
   btn.disabled=true;
+  var saveSucceeded = false;
   var audio_url=null, art_url=null;
   try {
     if (audioFile) audio_url = await uploadAudioFile(audioFile, date, status);
+    else if (editingEntry) audio_url = editingEntry.audio_url || null;
     if (extractedArtBlob) art_url = await uploadArtFile(extractedArtBlob, date, status);
+    else if (editingEntry) art_url = editingEntry.art_url || null;
     status.textContent='Saving…';
-    await requestJson(ENTRY_CREATE_URL, {
+    var result = await requestJson(saveUrl, {
+      id: editingEntry ? editingEntry.id : undefined,
       title: title,
       entry_date: date,
       scripture: scripture,
@@ -1206,34 +1374,35 @@ async function handleUpload() {
       audio_url: audio_url,
       art_url: art_url
     });
-    toast('Published ✦');
-    ['uTitle','uScripture','uLyrics','gatePw'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (el) el.value='';
-    });
-    document.getElementById('uAudio').value='';
-    document.getElementById('uDate').valueAsDate=new Date();
-    document.getElementById('audioDrop')._selectedFile = null;
-    document.getElementById('audioFilename').textContent='';
-    document.getElementById('audioFilename').classList.remove('show');
-    document.getElementById('extractedArtWrap').classList.remove('show');
-    extractedArtBlob = null;
-    await loadEntries();
-    showView('archive');
+    var savedEntry = result && result.entry ? result.entry : null;
+    if (savedEntry) {
+      upsertLocalEntry(savedEntry);
+      renderGrid();
+      renderAdminEntryList();
+      if (current && current.id === savedEntry.id) loadEntry(savedEntry, false);
+    }
+    cancelEdit();
+    saveSucceeded = true;
+    toast(editingEntry ? 'Changes saved' : 'Published ✦');
+    loadEntries();
+    showView('admin-upload');
   } catch (err) {
     console.error(err);
     if (String(err.message || '').indexOf('unauthorized') > -1) handleAdminUnauthorized();
-    toast('Save failed');
+    status.textContent = String(err.message || 'Save failed').replace(/-/g, ' ');
+    toast(String(err.message || 'Save failed').replace(/-/g, ' '));
   } finally {
-    btn.disabled=false; status.textContent='';
+    btn.disabled=false;
+    if (saveSucceeded) status.textContent='';
   }
 }
 
 // ── TOAST ──
 function toast(msg) {
   var el=document.getElementById('toast');
+  clearTimeout(toastTimer);
   el.textContent=msg; el.classList.add('show');
-  setTimeout(function(){ el.classList.remove('show'); }, 2800);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2800);
 }
 </script>
 </body>

@@ -118,6 +118,23 @@ export async function createDevotional(env, payload) {
   return Array.isArray(data) ? data[0] || null : data;
 }
 
+export async function updateDevotional(env, id, payload) {
+  const { baseUrl, serviceRole } = requireConfig(env);
+  const res = await fetch(
+    baseUrl + "/rest/v1/devotionals?id=eq." + encodeURIComponent(id),
+    {
+      method: "PATCH",
+      headers: authHeaders(serviceRole, {
+        "content-type": "application/json",
+        Prefer: "return=representation"
+      }),
+      body: JSON.stringify(payload)
+    }
+  );
+  const data = await readJsonOrThrow(res);
+  return Array.isArray(data) ? data[0] || null : data;
+}
+
 export async function fetchDevotional(env, id) {
   const { baseUrl, serviceRole } = requireConfig(env);
   const res = await fetch(

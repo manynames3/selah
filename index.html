@@ -34,15 +34,6 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .sr::before{content:'';display:block;width:38%;height:38%;border-radius:50%;background:#121008;margin:31% auto;}
 .slv{flex-shrink:0;width:40px;border-radius:2px 2px 0 0;}
 
-/* CANDLE */
-.candle-wrap{position:fixed;bottom:3.5rem;right:2rem;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;}
-.candle-flame{width:12px;height:18px;position:relative;margin-bottom:-1px;}
-.candle-flame::before{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:16px;background:radial-gradient(ellipse at 50% 80%,#fff8e1 0%,#ffcc44 40%,#ff8800 70%,transparent 100%);border-radius:50% 50% 35% 35%;animation:flicker 1.8s ease-in-out infinite;filter:blur(.5px);}
-.candle-glow{position:absolute;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(255,160,40,.22) 0%,transparent 70%);top:-25px;left:50%;transform:translateX(-50%);animation:glowPulse 1.8s ease-in-out infinite;}
-.candle-body{width:10px;height:36px;background:linear-gradient(to bottom,#e8d8b0,#c8b888,#a89858);border-radius:2px 2px 1px 1px;}
-@keyframes flicker{0%,100%{transform:translateX(-50%) scaleX(1) rotate(-1deg);}25%{transform:translateX(-50%) scaleX(.9) rotate(1.5deg);}50%{transform:translateX(-50%) scaleX(1.05) rotate(-2deg);}}
-@keyframes glowPulse{0%,100%{opacity:.8;}50%{opacity:.4;}}
-
 /* HEADER */
 header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 2.5rem;background:rgba(12,7,2,.65);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);}
 .logo-wrap{display:flex;align-items:center;gap:.9rem;}
@@ -69,6 +60,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 .view{display:none;}
 .view.active{display:block;animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.site-footer{position:relative;z-index:10;max-width:1100px;margin:0 auto;padding:0 1.5rem 2rem;text-align:center;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
 
 /* HERO */
 .hero-player{display:grid;grid-template-columns:240px 1fr;gap:2.5rem;padding:1.2rem 0 1rem;align-items:center;}
@@ -319,10 +311,6 @@ body.admin-mode .a-delete{display:flex;}
 <div class="room-bg" id="roomBg"></div>
 <div class="grain"></div>
 <div class="shelf-bg" id="shelfBg"></div>
-<div class="candle-wrap">
-  <div class="candle-flame"><div class="candle-glow"></div></div>
-  <div class="candle-body"></div>
-</div>
 
 <header>
   <div class="logo-wrap">
@@ -490,6 +478,8 @@ body.admin-mode .a-delete{display:flex;}
     </div>
   </div>
 </div>
+
+<footer class="site-footer">©2026 SUPREME AI VENTURES LLC</footer>
 
 <!-- LYRICS MODAL -->
 <div class="modal-backdrop" id="modalBg" onclick="closeModalBg(event)">

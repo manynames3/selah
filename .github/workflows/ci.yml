@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate inline script syntax
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:[^>]*)>([\s\S]*?)<\/script>/g)]
+            .map((match) => match[1].trim())
+            .filter(Boolean);
+          if (!scripts.length) {
+            throw new Error('No inline script block found in index.html');
+          }
+          new Function(scripts[scripts.length - 1]);
+          console.log('index.html inline script parses');
+          NODE
+
+      - name: Validate Pages Function syntax
+        run: |
+          find functions/api -name '*.js' -print0 | xargs -0 -n 1 node --check
+
+      - name: Validate patch hygiene
+        run: |
+          git diff --check "$(git hash-object -t tree /dev/null)" HEAD --

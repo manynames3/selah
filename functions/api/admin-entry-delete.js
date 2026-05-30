@@ -1,33 +1,21 @@
 import { requireAdmin, jsonResponse } from "./_auth.js";
 import { extractR2ObjectKeyFromPublicUrl } from "./_media.js";
-import {
-  deleteDevotional,
-  deletePublicObjects,
-  extractPublicObjectKey,
-  fetchDevotional,
-  getArtBucketName,
-  getAudioBucketName
-} from "./_supabase.js";
+import { deleteDevotional, fetchDevotional } from "./_db.js";
 
 async function cleanupMedia(env, entry) {
   const cleanup = [];
-  const artBucket = getArtBucketName(env);
-  const audioBucket = getAudioBucketName(env);
+  const artBucket = env.ART_BUCKET || env.AUDIO_BUCKET;
   const audioBase = String(env.AUDIO_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
+  const artBase = String(env.ART_PUBLIC_BASE_URL || env.AUDIO_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
 
   if (entry && entry.audio_url) {
     const r2Key = extractR2ObjectKeyFromPublicUrl(audioBase, entry.audio_url);
-    if (r2Key && env.AUDIO_BUCKET) {
-      cleanup.push(env.AUDIO_BUCKET.delete(r2Key));
-    } else {
-      const audioKey = extractPublicObjectKey(env, audioBucket, entry.audio_url);
-      if (audioKey) cleanup.push(deletePublicObjects(env, audioBucket, [audioKey]));
-    }
+    if (r2Key && env.AUDIO_BUCKET) cleanup.push(env.AUDIO_BUCKET.delete(r2Key));
   }
 
   if (entry && entry.art_url) {
-    const artKey = extractPublicObjectKey(env, artBucket, entry.art_url);
-    if (artKey) cleanup.push(deletePublicObjects(env, artBucket, [artKey]));
+    const artKey = extractR2ObjectKeyFromPublicUrl(artBase, entry.art_url);
+    if (artKey && artBucket) cleanup.push(artBucket.delete(artKey));
   }
 
   return Promise.allSettled(cleanup);

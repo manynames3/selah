@@ -1,5 +1,5 @@
 import { requireAdmin, jsonResponse } from "./_auth.js";
-import { createDevotional } from "./_supabase.js";
+import { createDevotional } from "./_db.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);

@@ -1,10 +1,13 @@
 import { requireAdmin, jsonResponse } from "./_auth.js";
-import { buildObjectKey } from "./_media.js";
-import { getArtBucketName, uploadPublicObject } from "./_supabase.js";
+import { buildObjectKey, buildPublicUrl } from "./_media.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);
   if (denied) return denied;
+
+  const bucket = context.env.ART_BUCKET || context.env.AUDIO_BUCKET;
+  const publicBaseUrl = context.env.ART_PUBLIC_BASE_URL || context.env.AUDIO_PUBLIC_BASE_URL;
+  const keyPrefix = context.env.ART_KEY_PREFIX || "art";
 
   const url = new URL(context.request.url);
   const filename = context.request.headers.get("x-file-name") || url.searchParams.get("filename") || "art.jpg";
@@ -15,14 +18,19 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const result = await uploadPublicObject(
-      context.env,
-      getArtBucketName(context.env),
-      buildObjectKey(context.env.SUPABASE_ART_KEY_PREFIX || "art", entryDate, filename),
-      context.request.body,
-      { contentType, upsert: true }
-    );
-    return jsonResponse(result);
+    if (!bucket || !publicBaseUrl) {
+      return jsonResponse({ error: "missing-r2-config" }, { status: 500 });
+    }
+
+    const objectKey = buildObjectKey(keyPrefix, entryDate, filename);
+    await bucket.put(objectKey, context.request.body, {
+      httpMetadata: { contentType }
+    });
+
+    return jsonResponse({
+      objectKey,
+      publicUrl: buildPublicUrl(publicBaseUrl, objectKey)
+    });
   } catch (error) {
     return jsonResponse(
       { error: "art-upload-failed", message: String(error && error.message || error) },

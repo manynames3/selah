@@ -4,12 +4,21 @@
   "compatibility_date": "2026-04-24",
   "vars": {
     "AUDIO_PUBLIC_BASE_URL": "https://pub-4a790fcd9a124c6f83cdeaae9c1905fd.r2.dev",
-    "AUDIO_KEY_PREFIX": "audio"
+    "AUDIO_KEY_PREFIX": "audio",
+    "ART_PUBLIC_BASE_URL": "https://pub-4a790fcd9a124c6f83cdeaae9c1905fd.r2.dev",
+    "ART_KEY_PREFIX": "art"
   },
   "r2_buckets": [
     {
       "bucket_name": "selah-audio",
       "binding": "AUDIO_BUCKET"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "selah",
+      "database_id": "d355635f-426e-412b-91a2-d9ed11b8c98f"
     }
   ]
 }

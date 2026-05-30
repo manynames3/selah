@@ -1,6 +1,5 @@
 import { requireAdmin, jsonResponse } from "./_auth.js";
 import { buildObjectKey, buildPublicUrl } from "./_media.js";
-import { getAudioBucketName, uploadPublicObject } from "./_supabase.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);
@@ -22,25 +21,18 @@ export async function onRequestPost(context) {
   const objectKey = buildObjectKey(keyPrefix, entryDate, filename);
 
   try {
-    if (bucket && publicBaseUrl) {
-      await bucket.put(objectKey, context.request.body, {
-        httpMetadata: { contentType }
-      });
-
-      return jsonResponse({
-        objectKey,
-        publicUrl: buildPublicUrl(publicBaseUrl, objectKey)
-      });
+    if (!bucket || !publicBaseUrl) {
+      return jsonResponse({ error: "missing-r2-config" }, { status: 500 });
     }
 
-    const uploaded = await uploadPublicObject(
-      context.env,
-      getAudioBucketName(context.env),
+    await bucket.put(objectKey, context.request.body, {
+      httpMetadata: { contentType }
+    });
+
+    return jsonResponse({
       objectKey,
-      context.request.body,
-      { contentType, upsert: true }
-    );
-    return jsonResponse(uploaded);
+      publicUrl: buildPublicUrl(publicBaseUrl, objectKey)
+    });
   } catch (error) {
     return jsonResponse(
       { error: "audio-upload-failed", message: String(error && error.message || error) },

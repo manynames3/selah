@@ -1,6 +1,5 @@
 import { requireAdmin, jsonResponse } from "./_auth.js";
 import { extractR2ObjectKeyFromPublicUrl } from "./_media.js";
-import { deletePublicObjects, extractPublicObjectKey, getAudioBucketName } from "./_supabase.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);
@@ -8,7 +7,6 @@ export async function onRequestPost(context) {
 
   const bucket = context.env.AUDIO_BUCKET;
   const publicBaseUrl = context.env.AUDIO_PUBLIC_BASE_URL;
-  const audioBucket = getAudioBucketName(context.env);
 
   let payload;
   try {
@@ -18,17 +16,15 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const audioUrl = payload && payload.url;
-    const r2Key = extractR2ObjectKeyFromPublicUrl(publicBaseUrl, audioUrl);
-    if (bucket && r2Key) {
-      await bucket.delete(r2Key);
-      return jsonResponse({ deleted: true, objectKey: r2Key });
+    if (!bucket || !publicBaseUrl) {
+      return jsonResponse({ error: "missing-r2-config" }, { status: 500 });
     }
 
-    const supabaseKey = extractPublicObjectKey(context.env, audioBucket, audioUrl);
-    if (supabaseKey) {
-      await deletePublicObjects(context.env, audioBucket, [supabaseKey]);
-      return jsonResponse({ deleted: true, objectKey: supabaseKey });
+    const audioUrl = payload && payload.url;
+    const r2Key = extractR2ObjectKeyFromPublicUrl(publicBaseUrl, audioUrl);
+    if (r2Key) {
+      await bucket.delete(r2Key);
+      return jsonResponse({ deleted: true, objectKey: r2Key });
     }
 
     return jsonResponse({ error: "invalid-public-url" }, { status: 400 });

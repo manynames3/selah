@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded in part by [ADR 0006](0006-public-assets-and-durable-media-cleanup.md). The framework-free single-page approach remains; CSS and JavaScript now live in separate static assets.
 
 ## Context
 

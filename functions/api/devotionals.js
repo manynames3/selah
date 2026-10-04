@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
     });
   } catch (error) {
     return Response.json(
-      { error: "d1-query-failed", message: String(error && error.message || error) },
+      { error: "archive-unavailable" },
       {
         status: 500,
         headers: { "cache-control": "no-store" }

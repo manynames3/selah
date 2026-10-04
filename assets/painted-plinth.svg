@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <filter id="ochre" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency=".026" numOctaves="3" seed="19" result="edge"/>
+      <feDisplacementMap in="SourceGraphic" in2="edge" scale="4" result="paint"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".4" numOctaves="3" seed="3" result="tooth"/>
+      <feColorMatrix in="tooth" type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".2"/></feComponentTransfer>
+      <feComposite in2="paint" operator="in" result="grain"/>
+      <feBlend in="paint" in2="grain" mode="multiply"/>
+    </filter>
+  </defs>
+  <g filter="url(#ochre)">
+    <path d="M16 12Q116 7 224 15L227 222Q117 231 13 223L10 25Z" fill="#e8cc8c"/>
+    <path d="M18 17Q123 9 222 18L222 64Q115 33 18 51Z" fill="#d8ad59" opacity=".3"/>
+    <path d="M14 157Q85 181 160 149L224 141L223 221L15 220Z" fill="#dba965" opacity=".26"/>
+    <path d="M19 28L17 217Q123 225 219 217L221 25Q118 15 26 22" fill="none" stroke="#857754" stroke-width=".8" opacity=".65"/>
+    <path d="M23 223Q92 229 174 225M225 65L225 196" fill="none" stroke="#ab8951" stroke-width="1.3" opacity=".3"/>
+  </g>
+</svg>

@@ -1,5 +1,6 @@
-import { requireAdmin, jsonResponse } from "./_auth.js";
-import { createDevotional } from "./_db.js";
+import { requireAdmin, jsonResponse, readPayload } from "./_auth.js";
+import { createDevotional, fetchDevotional, updateDevotional } from "./_db.js";
+import { validateEntry, validId } from "./_validation.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);
@@ -7,30 +8,26 @@ export async function onRequestPost(context) {
 
   let payload;
   try {
-    payload = await context.request.json();
+    payload = await readPayload(context.request);
   } catch {
     return jsonResponse({ error: "invalid-json" }, { status: 400 });
   }
 
-  const title = String(payload && payload.title || "").trim();
-  const entryDate = String(payload && payload.entry_date || "").trim();
-  if (!title || !entryDate) {
-    return jsonResponse({ error: "missing-required-fields" }, { status: 400 });
-  }
+  let entry;
+  try {
+    entry = validateEntry(payload, context.env);
+    if (payload.id && !validId(payload.id)) throw new Error("invalid-id");
+  } catch (error) { return jsonResponse({ error: error.message }, { status: 400 }); }
 
   try {
-    const row = await createDevotional(context.env, {
-      title,
-      entry_date: entryDate,
-      scripture: payload && payload.scripture ? String(payload.scripture).trim() : null,
-      lyrics: payload && payload.lyrics ? String(payload.lyrics) : null,
-      audio_url: payload && payload.audio_url ? String(payload.audio_url) : null,
-      art_url: payload && payload.art_url ? String(payload.art_url) : null
-    });
+    const existing = payload.id ? await fetchDevotional(context.env, payload.id) : null;
+    const row = existing
+      ? await updateDevotional(context.env, payload.id, entry, existing)
+      : await createDevotional(context.env, entry, payload.id || undefined);
     return jsonResponse({ entry: row });
   } catch (error) {
     return jsonResponse(
-      { error: "entry-create-failed", message: String(error && error.message || error) },
+      { error: "entry-create-failed" },
       { status: 500 }
     );
   }

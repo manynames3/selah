@@ -1,6 +1,6 @@
 {
   "name": "selah",
-  "pages_build_output_dir": ".",
+  "pages_build_output_dir": "dist",
   "compatibility_date": "2026-04-24",
   "vars": {
     "AUDIO_PUBLIC_BASE_URL": "https://pub-4a790fcd9a124c6f83cdeaae9c1905fd.r2.dev",

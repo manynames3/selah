@@ -1,25 +1,6 @@
-import { requireAdmin, jsonResponse } from "./_auth.js";
-import { extractR2ObjectKeyFromPublicUrl } from "./_media.js";
+import { requireAdmin, jsonResponse, readPayload } from "./_auth.js";
 import { fetchDevotional, updateDevotional } from "./_db.js";
-
-async function cleanupReplacedMedia(env, existing, next) {
-  const cleanup = [];
-  const artBucket = env.ART_BUCKET || env.AUDIO_BUCKET;
-  const audioBase = String(env.AUDIO_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
-  const artBase = String(env.ART_PUBLIC_BASE_URL || env.AUDIO_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
-
-  if (existing && existing.audio_url && existing.audio_url !== next.audio_url) {
-    const r2Key = extractR2ObjectKeyFromPublicUrl(audioBase, existing.audio_url);
-    if (r2Key && env.AUDIO_BUCKET) cleanup.push(env.AUDIO_BUCKET.delete(r2Key));
-  }
-
-  if (existing && existing.art_url && existing.art_url !== next.art_url) {
-    const artKey = extractR2ObjectKeyFromPublicUrl(artBase, existing.art_url);
-    if (artKey && artBucket) cleanup.push(artBucket.delete(artKey));
-  }
-
-  return Promise.allSettled(cleanup);
-}
+import { validateEntry, validId } from "./_validation.js";
 
 export async function onRequestPost(context) {
   const denied = await requireAdmin(context);
@@ -27,17 +8,17 @@ export async function onRequestPost(context) {
 
   let payload;
   try {
-    payload = await context.request.json();
+    payload = await readPayload(context.request);
   } catch {
     return jsonResponse({ error: "invalid-json" }, { status: 400 });
   }
 
   const id = String(payload && payload.id || "").trim();
-  const title = String(payload && payload.title || "").trim();
-  const entryDate = String(payload && payload.entry_date || "").trim();
-  if (!id || !title || !entryDate) {
-    return jsonResponse({ error: "missing-required-fields" }, { status: 400 });
-  }
+  let entry;
+  try {
+    if (!validId(id)) throw new Error("invalid-id");
+    entry = validateEntry(payload, context.env);
+  } catch (error) { return jsonResponse({ error: error.message }, { status: 400 }); }
 
   try {
     const existing = await fetchDevotional(context.env, id);
@@ -45,20 +26,11 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "not-found" }, { status: 404 });
     }
 
-    const updated = await updateDevotional(context.env, id, {
-      title,
-      entry_date: entryDate,
-      scripture: payload && payload.scripture ? String(payload.scripture).trim() : null,
-      lyrics: payload && payload.lyrics ? String(payload.lyrics) : null,
-      audio_url: payload && payload.audio_url ? String(payload.audio_url) : null,
-      art_url: payload && payload.art_url ? String(payload.art_url) : null
-    });
-
-    if (updated) await cleanupReplacedMedia(context.env, existing, updated);
+    const updated = await updateDevotional(context.env, id, entry, existing);
     return jsonResponse({ entry: updated });
   } catch (error) {
     return jsonResponse(
-      { error: "entry-update-failed", message: String(error && error.message || error) },
+      { error: "entry-update-failed" },
       { status: 500 }
     );
   }

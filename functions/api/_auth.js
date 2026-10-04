@@ -7,7 +7,8 @@ function noStoreHeaders(extra) {
 }
 
 function getSecret(env) {
-  return env.ADMIN_SESSION_SECRET || env.ADMIN_PASSWORD || "";
+  const secret = env.ADMIN_SESSION_SECRET || "";
+  return secret.length >= 32 && secret !== env.ADMIN_PASSWORD ? secret : "";
 }
 
 function parseCookies(header) {
@@ -74,6 +75,32 @@ export function jsonResponse(body, init) {
   const responseInit = Object.assign({}, init || {});
   responseInit.headers = noStoreHeaders(responseInit.headers);
   return Response.json(body, responseInit);
+}
+
+export async function readPayload(request) {
+  const reader = request.body && request.body.getReader();
+  if (!reader) throw new Error("invalid-json");
+  const chunks = [];
+  let length = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    length += value.byteLength;
+    if (length > 65536) {
+      await reader.cancel();
+      throw new Error("request-too-large");
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+export async function passwordMatches(provided, expected) {
+  const digest = async value => toBase64Url(new Uint8Array(await crypto.subtle.digest("SHA-256", textEncoder.encode(value))));
+  return constantTimeEqual(await digest(provided), await digest(expected));
 }
 
 export function clearAdminSessionCookie() {

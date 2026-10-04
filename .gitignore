@@ -2,3 +2,7 @@
 .dev.vars*
 .env*
 wrangler.toml
+node_modules/
+dist/
+playwright-report/
+test-results/

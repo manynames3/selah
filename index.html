@@ -17,7 +17,7 @@
 <div class="room-bg" id="roomBg"></div>
 <div class="grain"></div>
 <div class="shelf-bg" id="shelfBg" aria-hidden="true"></div>
-<a class="skip-link" href="#songbook">Skip to the song library</a>
+<a class="skip-link" href="#songbook">Skip to the Songbook</a>
 
 <header>
   <div class="logo-wrap">
@@ -30,7 +30,7 @@
   <div class="header-right">
     <div class="admin-badge" id="adminBadge"><div class="admin-dot"></div><span>Admin</span></div>
     <nav class="header-nav" aria-label="Main navigation">
-      <button type="button" class="hn-btn active" data-action="library">Song library</button>
+      <button type="button" class="hn-btn active" data-action="library">Songbook</button>
     </nav>
     <button type="button" class="utility-btn" id="adminNavBtn" data-action="admin">Songwriter login</button>
     <button type="button" class="utility-btn" id="logoutBtn" data-action="logout" hidden>Log out</button>
@@ -41,10 +41,11 @@
   <div class="preview-notice" id="localPreviewNotice">Opening the journal... If you opened this HTML file directly, use the <a href="http://127.0.0.1:8788/">local Cloudflare preview</a> or the <a href="https://selah-by8.pages.dev/">live site</a>. Songs need the app's server.</div>
   <!-- ARCHIVE -->
   <div id="view-archive" class="view active">
+    <div class="listening-opening">
     <section class="journal-intro" aria-labelledby="journalTitle">
-      <div><p class="intro-kicker">Songs, scribbles &amp; small beginnings</p><h1 id="journalTitle">A little room<br>for <em>new songs.</em></h1><p class="intro-copy">A Christian songwriter's open journal. Come listen, linger over the lyrics, and leave a note on a moment that moves you.</p></div>
-      <div class="intro-margin" aria-hidden="true"><img src="assets/watercolor-meadow.webp" width="900" height="600" alt="" decoding="async"/><span>made with a little faith<br>&amp; a lot of heart</span></div>
+      <h1 id="journalTitle">A little room for <em>new songs.</em></h1>
     </section>
+    <div class="intro-margin" aria-hidden="true"><img src="assets/watercolor-meadow.webp" width="900" height="600" alt="" decoding="async"/><span>made with a little faith<br>&amp; a lot of heart</span></div>
     <div class="hero-player">
       <div class="tt-scene" id="ttScene">
         <canvas id="vizCanvas" width="300" height="300" aria-hidden="true"></canvas>
@@ -71,7 +72,7 @@
 
       <div class="player-info">
         <div class="player-copy">
-          <div class="p-eyebrow" id="pEyebrow">Select a recording below</div>
+          <div class="p-eyebrow" id="pEyebrow">Select a song below</div>
           <h2 class="p-title" id="pTitle">Pick a little <em>melody.</em></h2>
           <p class="p-scripture" id="pScripture">The songbook is just below.</p>
         </div>
@@ -93,11 +94,18 @@
               <span class="ctrl-icon">+15</span><span class="ctrl-text">Forward</span>
             </button>
           </div>
-          <div class="detail-row">
+          <div class="song-actions" id="songActions" hidden>
+            <button type="button" class="lyrics-pill" data-action="lyrics" title="Open lyrics in a modal">Lyrics ↗</button>
+            <button type="button" class="utility-btn" data-action="copy-link">Copy song link</button>
+            <button type="button" class="utility-btn" id="nativeShareBtn" data-action="share" hidden>Share</button>
+            <button type="button" class="utility-btn note-prompt" id="feedbackPrompt" data-action="feedback-open" aria-expanded="false" aria-controls="feedbackForm">Leave a note at <span id="feedbackPromptTime">0:00</span></button>
+          </div>
+          <details class="playback-settings">
+            <summary>Playback settings</summary>
+            <div class="detail-row">
             <button type="button" class="loop-btn" id="loopBtn" data-action="loop" aria-pressed="false" title="Repeat the current song">
               <span>⟳</span><span>Loop</span>
             </button>
-            <button type="button" class="lyrics-pill" data-action="lyrics" title="Open lyrics in a modal">Lyrics ↗</button>
             <div class="volume-wrap">
               <button type="button" class="volume-btn" id="volumeBtn" data-action="mute" title="Mute or unmute volume" aria-label="Mute volume">🔊</button>
               <input class="volume-slider" id="volumeSlider" type="range" min="0" max="100" value="85" aria-label="Volume"/>
@@ -112,15 +120,18 @@
                 <button type="button" class="spd" data-action="speed" data-rate="1.5" aria-pressed="false">1.5×</button>
               </div>
             </div>
-          </div>
+            </div>
+          </details>
         </div>
       </div>
+    </div>
     </div>
 
     <section class="song-extras" id="songExtras" hidden>
       <div class="song-notes" id="songNotes" hidden><p class="section-kicker">From the notebook</p><p id="songNoteText"></p></div>
-      <div class="song-sharing"><span class="handwritten">Pass this song along.</span><button type="button" class="utility-btn" data-action="copy-link">Copy song link</button><button type="button" class="utility-btn" id="nativeShareBtn" data-action="share" hidden>Share</button></div>
-      <section class="feedback-section" aria-labelledby="feedbackHeading">
+      <details class="feedback-panel" id="feedbackPanel">
+        <summary><span>Listening notes</span><span class="feedback-count" id="feedbackCount">Opening notes...</span></summary>
+        <section class="feedback-section" aria-labelledby="feedbackHeading">
         <div class="feedback-heading"><div><p class="section-kicker">A listening conversation</p><h3 id="feedbackHeading">Leave a little note.</h3></div><button type="button" class="utility-btn" data-action="feedback-toggle" aria-expanded="false" aria-controls="feedbackForm">Add a listening note</button></div>
         <p class="feedback-help">A thought about a lyric, a melody, a moment. Notes appear here after the songwriter approves them.</p>
         <form id="feedbackForm" hidden>
@@ -131,21 +142,22 @@
           <p id="feedbackStatus" role="status" class="up-status"></p>
         </form>
         <div id="feedbackList" class="feedback-list" aria-live="polite"></div>
-      </section>
+        </section>
+      </details>
     </section>
 
     <div class="archive-head" id="songbook">
       <div>
         <div class="archive-kicker">The songbook</div>
-        <div class="archive-summary" id="archiveSummary">Loading recordings…</div>
+        <div class="archive-summary" id="archiveSummary">Loading songs…</div>
       </div>
-      <div class="archive-focus" id="archiveFocus">Choose a song below to start listening, or reopen the latest one from the archive.</div>
-      <img class="archive-botanical" src="assets/watercolor-meadow.webp" width="900" height="600" alt="" aria-hidden="true" loading="lazy" decoding="async"/>
+      <div class="archive-focus" id="archiveFocus">Choose a song from the songbook to start listening.</div>
     </div>
     <label class="search-wrap" for="songSearch"><span>Find a song</span><input type="search" id="songSearch" placeholder="Search title or key..." autocomplete="off"/></label>
     <div class="archive-grid" id="archiveGrid" aria-busy="true">
       <div class="empty-state" id="loadingState"><div class="g" style="animation:spin 1.5s linear infinite;display:inline-block">✦</div><p>Loading songs…</p></div>
     </div>
+    <div class="songbook-flourish" aria-hidden="true"><img class="archive-botanical" src="assets/watercolor-meadow.webp" width="900" height="600" alt="" loading="lazy" decoding="async"/><span class="handwritten">made with a little faith<br>&amp; a lot of heart</span></div>
   </div>
 
   <!-- ADMIN GATE -->
@@ -167,23 +179,23 @@
       <div class="writing-heading">
       <div>
       <h2 class="admin-h">A new page in the songbook.</h2>
-      <p class="admin-sub">Add your recording and a few words. Publishing makes this entry public immediately.</p>
+      <p class="admin-sub">Add your recording and a few words. Publishing makes this song public immediately.</p>
       </div>
       <img class="writing-botanical" src="assets/watercolor-meadow.webp" width="900" height="600" alt="" aria-hidden="true" decoding="async"/>
       </div>
       <form id="uploadForm">
       <div class="edit-shell" id="editShell">
         <div class="edit-copy">
-          <div class="edit-kicker">Editing Existing Entry</div>
+          <div class="edit-kicker">Editing Existing Song</div>
           <div class="edit-title" id="editTitle">Song title</div>
         </div>
         <button class="edit-cancel" type="button" data-action="cancel-edit">Cancel Edit</button>
       </div>
       <div class="form-row">
         <div class="field"><label for="uTitle">Song Title</label><input type="text" id="uTitle" required maxlength="200" placeholder="e.g. Still Waters"/></div>
-        <div class="field"><label for="uDate">Entry Date</label><input type="date" id="uDate" required/></div>
+        <div class="field"><label for="uDate">Song Date</label><input type="date" id="uDate" required/></div>
       </div>
-      <div class="field"><label for="uScripture">Scripture / Key / Tempo</label><input type="text" id="uScripture" maxlength="300" placeholder="e.g. Psalm 23:2 or C major | 100 BPM"/></div>
+      <div class="field"><label for="uScripture">Song details</label><input type="text" id="uScripture" maxlength="300" aria-describedby="songDetailsHelp"/><p class="field-note show" id="songDetailsHelp">e.g. Psalm 23:2 or C major | 100 BPM</p></div>
 
       <!-- MP3 DROP ZONE -->
       <div class="field">
@@ -215,7 +227,7 @@
       <div class="admin-library">
         <div class="admin-library-head">
           <div class="admin-library-title">Existing Songs</div>
-          <div class="admin-library-sub">Edit metadata or delete published entries.</div>
+          <div class="admin-library-sub">Update song details or remove a song.</div>
         </div>
         <div class="admin-entry-list" id="adminEntryList"></div>
       </div>
@@ -225,10 +237,16 @@
 
 <footer class="site-footer">©2026 SUPREME AI VENTURES LLC</footer>
 
+<aside class="mini-player" id="miniPlayer" aria-label="Current song controls" hidden>
+  <button type="button" class="mini-title" id="miniTitle" data-action="player-top" aria-label="Return to the record player"></button>
+  <button type="button" class="play-btn" id="miniPlayBtn" data-action="play" aria-label="Play current song">▶</button>
+  <div class="mini-timeline"><input class="mini-progress" id="miniProgress" type="range" min="0" max="0" value="0" step="0.1" aria-label="Mini-player playback position" disabled/><span class="mini-time" id="miniTime">0:00 / 0:00</span></div>
+</aside>
+
 <!-- LYRICS MODAL -->
 <div class="modal-backdrop" id="modalBg" hidden>
   <div class="lyrics-modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" tabindex="-1">
-    <button type="button" class="modal-close" data-action="close-lyrics" aria-label="Close lyrics">Close</button>
+    <div class="lyrics-toolbar"><span>Song lyrics</span><button type="button" class="modal-close" data-action="close-lyrics" aria-label="Close lyrics">Close</button></div>
     <div class="modal-art-header">
       <img id="mArtImg" alt="" style="display:none"/>
       <div class="modal-art-overlay"></div>
@@ -250,7 +268,7 @@
 <div class="del-modal-bg" id="delModalBg" hidden>
   <div class="del-modal" role="dialog" aria-modal="true" aria-labelledby="delTitle" aria-describedby="delSub" tabindex="-1">
     <div class="del-icon">🗑</div>
-    <div class="del-title" id="delTitle">Delete This Recording?</div>
+    <div class="del-title" id="delTitle">Delete This Song?</div>
     <div class="del-sub" id="delSub">This permanently removes the song, audio, and lyrics.</div>
     <span class="del-song-name" id="delSongName"></span>
     <div class="del-steps">
@@ -271,7 +289,7 @@
 
 <audio id="audioEl" preload="metadata"></audio>
 <div id="toast" role="status" aria-live="polite"></div>
-<noscript><p class="noscript-message">SELAH needs JavaScript for playback and the song library.</p></noscript>
+<noscript><p class="noscript-message">SELAH needs JavaScript for playback and the Songbook.</p></noscript>
 
 <script type="module" src="assets/app.js"></script>
 </body>

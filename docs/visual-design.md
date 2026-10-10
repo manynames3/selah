@@ -8,7 +8,7 @@ The interface should resemble ink and watercolor on tactile artist rag paper rat
 - The page background uses only very pale grey-sage pigment over warm natural-white paper. Butter-yellow, coral and sky-blue remain localized to the botanical artwork rather than competing across the whole page. Controls keep clear outlines, readable labels and distinct focus states.
 - Songbook selection and hover borrow the muted blue of the botanical flower petals. Selection uses a deeper paper-blended blue wash, a colored edge and a matching status badge; hover and keyboard focus use a lighter tint. The rest of the interface palette stays unchanged.
 - The record uses a hand-painted image, but its rotation, album artwork, needle pivot and 9-to-36-degree playback tracking remain real interface elements.
-- Botanical illustrations and small musical sketches appear at meaningful sizes. Mobile layouts reflow them instead of hiding them or reducing them to tiny ornaments.
+- Botanical illustrations and small musical sketches appear at meaningful sizes. One bouquet introduces the desktop journal; on mobile and shared-song links, a full-size bouquet closes the library instead of repeating it between the player and song list.
 - Decoration is non-interactive, has empty alternative text or is hidden from assistive technology, and never changes the waveform's real sample data or seek hit area.
 
 ## Original Assets
@@ -31,6 +31,13 @@ The user supplied screenshots from their Bellyfloat game as visual references fo
 ## Guardrails
 
 Preserve publishing, feedback approval, sharing, playback, seeking, volume, speed and looping behavior. Keep shared links focused on the selected recording, with botanical artwork retained farther down the songbook. Respect reduced-motion preferences. Test narrow mobile widths as well as the desktop view.
+
+## Listening Layout
+
+- On mobile, rewind, play/pause and forward sit directly below the record, before the waveform. Lyrics, sharing and the current-moment note action stay beside the main controls. Loop, volume and speed are available in the expandable playback settings.
+- The songbook follows the player and a compact listening-notes disclosure. Approved notes remain discoverable with a count; opening the note form captures the current playback moment. Closing and reopening a draft keeps its text and original timestamp.
+- A scroll-aware mini-player reuses the same native audio element. It appears only after the main player leaves the viewport, hides in the writing room and dialogs, and offers play/pause, seeking and a return-to-player action.
+- Playback and song-action controls have at least 44px hit areas, including the thin range sliders. Mobile library titles wrap to two lines; their full titles remain available in accessible labels. Lyrics use a smaller artwork header and a sticky Close toolbar.
 
 ## Release Screenshots
 

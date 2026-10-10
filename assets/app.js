@@ -26,6 +26,7 @@ let waveformController = null;
 const waveformCache = new Map();
 let pendingPublication = null, artworkPreviewUrl = null, dialogOpener = null, activeDialog = null;
 let saving = false, deleting = false;
+let playerOutOfView = false;
 
 // ── INIT ──
 function localDate() {
@@ -276,6 +277,9 @@ function syncPlaybackUI() {
   playBtn.textContent = playing ? '⏸' : '▶';
   playBtn.setAttribute('aria-label', playing ? 'Pause song' : 'Play song');
   playBtn.title = playing ? 'Pause the current song' : 'Play the current song';
+  const miniPlay = document.getElementById('miniPlayBtn');
+  miniPlay.textContent = playing ? '⏸' : '▶';
+  miniPlay.setAttribute('aria-label', playing ? 'Pause current song' : 'Play current song');
   document.getElementById('ttScene').classList.toggle('is-playing', playing);
   document.getElementById('npRow').setAttribute('aria-hidden', String(!playing));
   document.getElementById('tNow').textContent = fmt(audio.currentTime || 0);
@@ -293,8 +297,32 @@ function syncPlaybackUI() {
   seek.setAttribute('aria-valuenow', clampTime(audio.currentTime, duration).toFixed(2));
   seek.setAttribute('aria-valuetext', fmt(audio.currentTime) + ' of ' + fmt(duration));
   seek.setAttribute('aria-disabled', String(!duration));
+  const miniProgress = document.getElementById('miniProgress');
+  miniProgress.max = duration;
+  miniProgress.value = clampTime(audio.currentTime, duration);
+  miniProgress.disabled = !duration || !!audio.error;
+  miniProgress.setAttribute('aria-valuetext', fmt(audio.currentTime) + ' of ' + fmt(duration));
+  miniProgress.style.setProperty('--progress', (pct * 100).toFixed(2) + '%');
+  document.getElementById('miniTime').textContent = audio.error ? 'Song unavailable' : duration ? fmt(audio.currentTime) + ' / ' + fmt(duration) : 'Loading song...';
+  document.getElementById('feedbackPromptTime').textContent = fmt(audio.currentTime);
+  const miniTitle = document.getElementById('miniTitle');
+  if (miniTitle.textContent !== (current?.title || '')) {
+    miniTitle.textContent = current?.title || '';
+    miniTitle.setAttribute('aria-label', 'Return to the record player: ' + (current?.title || ''));
+  }
+  document.getElementById('songActions').hidden = !current;
+  updateMiniPlayerVisibility();
   document.querySelectorAll('[data-action="play"], [data-action="rewind"], [data-action="forward"]').forEach(button => { if (button.tagName === 'BUTTON') button.disabled = !current?.audio_url; });
   document.querySelector('[data-action="lyrics"]').disabled = !current;
+}
+function updateMiniPlayerVisibility() {
+  const visible = !!(playerOutOfView && current?.audio_url && !activeDialog && document.getElementById('view-archive').classList.contains('active'));
+  document.getElementById('miniPlayer').hidden = !visible;
+  document.body.classList.toggle('mini-player-visible', visible);
+}
+function returnToPlayer() {
+  document.getElementById('playBtn').focus({ preventScroll: true });
+  document.querySelector('.hero-player').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
 }
 function seekFromWaveform(e) {
   if (!Number.isFinite(audio.duration) || !audio.duration) return;
@@ -320,17 +348,16 @@ function updateArchiveMeta() {
   var focus = document.getElementById('archiveFocus');
   if (!summary || !focus) return;
   if (!entries.length) {
-    summary.textContent = entriesLoaded ? 'No recordings published yet.' : 'Loading recordings…';
-    focus.textContent = 'Choose a song below to start listening, or reopen the latest one from the archive.';
+    summary.textContent = entriesLoaded ? 'No songs published yet.' : 'Loading songs…';
+    focus.textContent = entriesLoaded ? 'New songs will appear here once published.' : 'Choose a song from the songbook to start listening.';
     return;
   }
-  var latest = entries[0];
-  summary.textContent = entries.length + ' song' + (entries.length === 1 ? '' : 's') + ' in the archive. Latest: ' + latest.title + '.';
+  summary.textContent = entries.length + ' song' + (entries.length === 1 ? '' : 's');
   if (current) {
     var d = new Date(current.entry_date+'T12:00:00');
     focus.textContent = 'Selected: ' + current.title + ' • ' + d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '.';
   } else {
-    focus.textContent = 'Choose a song below to start listening, or reopen the latest one from the archive.';
+    focus.textContent = 'Choose a song from the songbook to start listening.';
   }
 }
 function escapeHtml(value) {
@@ -359,7 +386,7 @@ function removeLocalEntry(id) {
 }
 function resetPlayerState() {
   audio.pause(); audio.removeAttribute('src'); audio.load(); current = null;
-  document.getElementById('pEyebrow').textContent = 'Select a recording below';
+  document.getElementById('pEyebrow').textContent = 'Select a song below';
   document.getElementById('pTitle').innerHTML = 'Pick a little <em>melody.</em>';
   document.getElementById('pScripture').textContent = 'The songbook is just below.';
   document.getElementById('artImg').style.display = 'none';
@@ -429,6 +456,8 @@ function showView(name) {
   document.getElementById('adminNavBtn').classList.toggle('active', name.startsWith('admin'));
   if (name === 'archive' && !entriesLoaded) loadEntries();
   if (name === 'admin-upload') { renderAdminEntryList(); loadModeration(); }
+  playerOutOfView = document.querySelector('.hero-player').getBoundingClientRect().bottom <= 0;
+  updateMiniPlayerVisibility();
 }
 
 // ── LOAD ENTRIES ──
@@ -506,16 +535,16 @@ function renderAdminEntryList() {
   var list = document.getElementById('adminEntryList');
   if (!list) return;
   if (!entriesLoaded) {
-    list.innerHTML = archiveError ? '<div class="admin-entry-empty">Could not load entries. <button class="utility-btn" data-action="retry">Retry</button></div>' : '<div class="admin-entry-empty">Loading entries…</div>';
+    list.innerHTML = archiveError ? '<div class="admin-entry-empty">Could not load songs. <button class="utility-btn" data-action="retry">Retry</button></div>' : '<div class="admin-entry-empty">Loading songs…</div>';
     return;
   }
   if (!entries.length) {
-    list.innerHTML = '<div class="admin-entry-empty">No published entries yet.</div>';
+    list.innerHTML = '<div class="admin-entry-empty">No songs published yet.</div>';
     return;
   }
   list.innerHTML = entries.map(function(entry) {
     var date = new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-    var scripture = entry.scripture ? '<span><strong>Key</strong> ' + escapeHtml(entry.scripture) + '</span>' : '';
+    var scripture = entry.scripture ? '<span><strong>Song details</strong> ' + escapeHtml(entry.scripture) + '</span>' : '';
     var audioLabel = entry.audio_url ? 'Audio ready' : 'No audio';
     var isEditing = editingEntryId === entry.id;
     return '<div class="admin-entry-card' + (isEditing ? ' is-editing' : '') + '">' +
@@ -562,7 +591,7 @@ function loadEntry(entry, autoplay, navigate = true) {
   highlightCard(entry.id);
   updateArchiveMeta();
   if (!sameTrack && entry.audio_url) {
-    document.getElementById('playerStatus').textContent = 'Getting the recording ready...';
+    document.getElementById('playerStatus').textContent = 'Getting the song ready...';
     audio.src = entry.audio_url;
     audio.load();
     syncPlaybackUI();
@@ -654,7 +683,7 @@ audio.onpause = syncPlaybackUI;
 audio.onloadedmetadata = function(){ document.getElementById('playerStatus').textContent = ''; syncPlaybackUI(); };
 audio.onwaiting = function(){ if (!audio.paused) document.getElementById('playerStatus').textContent = 'Buffering...'; };
 audio.onplaying = function(){ document.getElementById('playerStatus').textContent = ''; syncPlaybackUI(); };
-audio.onerror = function(){ document.getElementById('playerStatus').textContent = 'This recording could not be played. Try another song or press play to retry.'; syncPlaybackUI(); };
+audio.onerror = function(){ document.getElementById('playerStatus').textContent = 'This song could not be played. Try another song or press play to retry.'; syncPlaybackUI(); };
 audio.ondurationchange = syncPlaybackUI;
 audio.onvolumechange = syncVolumeUI;
 audio.onseeked = syncPlaybackUI;
@@ -677,7 +706,7 @@ function openModal(e) {
   document.getElementById('mDate').textContent = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   document.getElementById('mTitle').textContent = current.title||'';
   document.getElementById('mScripture').textContent = current.scripture||'';
-  document.getElementById('mLyrics').textContent = current.lyrics||'No lyrics added for this entry.';
+  document.getElementById('mLyrics').textContent = current.lyrics||'No lyrics added for this song.';
   var mi = document.getElementById('mArtImg');
   if (current.art_url) { mi.src=current.art_url; mi.style.display='block'; } else { mi.style.display='none'; }
   openDialog('modalBg');
@@ -733,7 +762,7 @@ function openDeleteModal(id, title, e) {
   document.getElementById('dStep1').className='del-step active';
   document.getElementById('dStep2').className='del-step';
   document.getElementById('dLine').className='del-step-line';
-  document.getElementById('delTitle').textContent='Delete This Recording?';
+  document.getElementById('delTitle').textContent='Delete This Song?';
   document.getElementById('delSub').textContent='This permanently removes the song, audio, and lyrics.';
   document.getElementById('delRow1').style.display='flex';
   document.getElementById('delRow2').style.display='none';
@@ -850,7 +879,7 @@ async function handleUpload() {
   var status=document.getElementById('upStatus');
   var editingEntry = editingEntryId ? entries.find(function(entry) { return entry.id === editingEntryId; }) : null;
   if (!audioFile && !editingEntry?.audio_url) { toast('Add a recording before publishing.'); return; }
-  if (editingEntryId && !editingEntry) { toast('That entry no longer exists. Refresh the songbook.'); return; }
+  if (editingEntryId && !editingEntry) { toast('That song no longer exists. Refresh the songbook.'); return; }
   var saveUrl = editingEntry ? ENTRY_UPDATE_URL : ENTRY_CREATE_URL;
   saving = true;
   document.querySelectorAll('#uploadForm input, #uploadForm textarea, #uploadForm button').forEach(el => { el.disabled = true; });
@@ -890,7 +919,7 @@ async function handleUpload() {
     saving = false;
     cancelEdit();
     saveSucceeded = true;
-    toast(editingEntry ? 'Changes saved' : 'Published ✦');
+    toast(editingEntry ? 'Song changes saved.' : 'Your song is published and ready to share.');
     loadEntries();
     showView('admin-upload');
   } catch (err) {
@@ -924,7 +953,7 @@ function friendlyError(error) {
     'invalid-file-content': 'The file does not match its extension. Choose a valid audio or image file.',
     'invalid-feedback': 'Add a note of up to 1,000 characters and a valid timestamp.',
     'invalid-title': 'Use a song title of 1 to 200 characters.',
-    'invalid-date': 'Choose a valid entry date.',
+    'invalid-date': 'Choose a valid song date.',
     'not-found': 'This item is no longer available.',
     'invalid-origin': 'Reload the app from its normal address and try again.'
   };
@@ -957,7 +986,8 @@ function updateSongExtras(changed) {
     feedbackTime = 0;
     document.getElementById('feedbackForm').reset();
     document.getElementById('feedbackForm').hidden = true;
-    document.querySelector('[data-action="feedback-toggle"]').setAttribute('aria-expanded', 'false');
+    document.getElementById('feedbackPanel').open = false;
+    syncFeedbackControls();
     document.getElementById('feedbackTime').textContent = '0:00';
     document.getElementById('feedbackStatus').textContent = '';
   }
@@ -967,11 +997,24 @@ function captureFeedbackTime() {
   feedbackTime = clampTime(audio.currentTime, audio.duration);
   document.getElementById('feedbackTime').textContent = fmt(feedbackTime);
 }
+function syncFeedbackControls() {
+  const expanded = document.getElementById('feedbackPanel').open && !document.getElementById('feedbackForm').hidden;
+  document.querySelectorAll('[data-action="feedback-open"], [data-action="feedback-toggle"]').forEach(button => button.setAttribute('aria-expanded', String(expanded)));
+  document.querySelector('[data-action="feedback-toggle"]').textContent = expanded ? 'Hide note form' : 'Add a listening note';
+}
+function openFeedbackForm() {
+  if (!current) return;
+  document.getElementById('feedbackPanel').open = true;
+  const form = document.getElementById('feedbackForm');
+  if (!document.getElementById('feedbackComment').value.trim()) captureFeedbackTime();
+  form.hidden = false;
+  syncFeedbackControls();
+  document.getElementById('feedbackComment').focus();
+}
 function toggleFeedbackForm() {
   const form = document.getElementById('feedbackForm');
-  form.hidden = !form.hidden;
-  document.querySelector('[data-action="feedback-toggle"]').setAttribute('aria-expanded', String(!form.hidden));
-  if (!form.hidden) { captureFeedbackTime(); document.getElementById('feedbackComment').focus(); }
+  if (form.hidden) openFeedbackForm();
+  else { form.hidden = true; syncFeedbackControls(); }
 }
 async function loadFeedback() {
   if (!current) return;
@@ -980,13 +1023,19 @@ async function loadFeedback() {
   feedbackController = controller;
   const id = current.id;
   const list = document.getElementById('feedbackList');
+  const count = document.getElementById('feedbackCount');
+  count.textContent = 'Opening notes...';
   list.innerHTML = '<p class="feedback-empty">Opening the listening notes...</p>';
   try {
     const result = await requestJson('/api/feedback?entryId=' + encodeURIComponent(id), undefined, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) });
     if (current?.id !== id) return;
+    count.textContent = result.feedback.length ? result.feedback.length + (result.feedback.length === 1 ? ' approved note' : ' approved notes') : 'No notes yet';
     list.innerHTML = result.feedback.length ? result.feedback.map(note => feedbackMarkup(note, id)).join('') : '<p class="feedback-empty">No listening notes yet. Yours could be the first.</p>';
   } catch (error) {
-    if (!controller.signal.aborted && current?.id === id) list.innerHTML = '<p class="feedback-help">Listening notes could not load. <button class="utility-btn" data-action="retry-feedback">Try again</button></p>';
+    if (!controller.signal.aborted && current?.id === id) {
+      count.textContent = 'Could not load notes';
+      list.innerHTML = '<p class="feedback-help">Listening notes could not load. <button class="utility-btn" data-action="retry-feedback">Try again</button></p>';
+    }
   }
 }
 function feedbackMarkup(note, entryId) {
@@ -1005,9 +1054,9 @@ async function submitFeedback(event) {
   try {
     await requestJson('/api/feedback', { entry_id: id, timestamp_seconds: feedbackTime, name: document.getElementById('feedbackName').value.trim(), comment });
     if (current?.id !== id) return;
-    status.textContent = 'Thank you! Your note is waiting for approval and is not public yet.';
+    status.textContent = 'Note sent. It will appear here if the songwriter approves it.';
     document.getElementById('feedbackComment').value = '';
-    toast('Listening note sent for approval.');
+    toast(status.textContent);
     if (isAdmin) loadModeration();
   } catch (error) {
     if (current?.id === id) status.textContent = friendlyError(error) + ' Your note has been kept.';
@@ -1060,6 +1109,8 @@ function openDialog(id) {
   document.querySelector('header').inert = true;
   document.querySelector('.page-wrap').inert = true;
   document.querySelector('footer').inert = true;
+  document.getElementById('miniPlayer').inert = true;
+  updateMiniPlayerVisibility();
   document.body.style.overflow = 'hidden';
   const target = activeDialog.querySelector('button:not([disabled])') || activeDialog.querySelector('[role="dialog"]');
   target.focus();
@@ -1073,6 +1124,8 @@ function closeDialog(id) {
   document.querySelector('footer').inert = false;
   document.body.style.overflow = '';
   if (activeDialog === dialog) activeDialog = null;
+  document.getElementById('miniPlayer').inert = false;
+  updateMiniPlayerVisibility();
   if (dialogOpener?.isConnected && !dialogOpener.closest('[hidden]')) dialogOpener.focus();
 }
 async function logout() {
@@ -1093,7 +1146,7 @@ document.addEventListener('click', event => {
   const action = button.dataset.action;
   const actions = {
     library: () => { showView('archive'); document.getElementById('songbook').scrollIntoView({ behavior: 'smooth' }); },
-    admin: openAdminArea, logout, play: togglePlay, rewind: rewind15, forward: skipFwd,
+    admin: openAdminArea, logout, play: togglePlay, 'player-top': returnToPlayer, rewind: rewind15, forward: skipFwd,
     loop: toggleLoop, lyrics: openModal, mute: toggleMute, speed: () => setSpeed(Number(button.dataset.rate)),
     'cancel-edit': cancelEdit, 'close-lyrics': closeModal, 'cancel-delete': closeDeleteModal,
     'advance-delete': advanceDelete, delete: executeDelete, retry: loadEntries,
@@ -1104,7 +1157,7 @@ document.addEventListener('click', event => {
       loadEntry(entries.find(item => item.id === button.dataset.id));
     },
     'copy-link': () => shareSong(), share: () => shareSong(true),
-    'feedback-toggle': toggleFeedbackForm, 'feedback-time': captureFeedbackTime,
+    'feedback-open': openFeedbackForm, 'feedback-toggle': toggleFeedbackForm, 'feedback-time': captureFeedbackTime,
     'retry-feedback': loadFeedback, 'refresh-feedback': loadModeration,
     'seek-feedback': () => jumpToFeedback(button.dataset.id, Number(button.dataset.time)),
     moderate: () => moderateFeedback(button)
@@ -1112,6 +1165,8 @@ document.addEventListener('click', event => {
   if (actions[action]) actions[action]();
 });
 document.getElementById('volumeSlider').addEventListener('input', event => setVolume(event.target.value));
+document.getElementById('miniProgress').addEventListener('input', event => seekTo(Number(event.target.value)));
+document.getElementById('feedbackPanel').addEventListener('toggle', syncFeedbackControls);
 document.getElementById('songSearch').addEventListener('input', renderGrid);
 document.getElementById('uAudio').addEventListener('change', event => onAudioSelected(event.target.files[0]));
 document.getElementById('loginForm').addEventListener('submit', event => { event.preventDefault(); checkGate(); });
@@ -1154,4 +1209,9 @@ window.addEventListener('beforeunload', event => {
   if (dirty) { event.preventDefault(); event.returnValue = ''; }
 });
 document.addEventListener('error', event => { if (event.target.matches?.('.a-art')) event.target.hidden = true; }, true);
+// One native audio element drives both players; the compact controls only appear below the main player.
+new IntersectionObserver(([entry]) => {
+  playerOutOfView = entry.boundingClientRect.bottom <= 0;
+  updateMiniPlayerVisibility();
+}).observe(document.querySelector('.hero-player'));
 syncPlaybackUI();

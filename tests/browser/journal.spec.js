@@ -43,6 +43,7 @@ test('a songwriter publishes, guests share and comment, and approval protects th
 
   await page.goto('/?song=' + id);
   await expect(page.locator('#pTitle')).toHaveText('Morning Mercies');
+  await expect(page.locator('#archiveSummary')).toHaveText('1 song');
   await expect(page.locator('#songNoteText')).toHaveText(entry.notes);
   await expect(page.locator('#tTot')).toHaveText('0:36');
   const seek = page.getByRole('slider', { name: 'Song playback position' });
@@ -58,14 +59,15 @@ test('a songwriter publishes, guests share and comment, and approval protects th
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
 
-  await page.getByRole('button', { name: 'Add a listening note' }).click();
+  await page.getByRole('button', { name: /^Leave a note at/ }).click();
   await seek.focus(); await page.keyboard.press('ArrowRight');
   await page.getByRole('button', { name: 'Use current moment' }).click();
   await expect(page.locator('#feedbackTime')).toHaveText('0:05');
   await page.getByLabel('Your name').fill('Listener');
   await page.getByLabel('Your listening note').fill('The melody here feels hopeful.');
   await page.getByRole('button', { name: 'Send to the songwriter' }).click();
-  await expect(page.locator('#feedbackStatus')).toContainText('not public yet');
+  await expect(page.locator('#feedbackStatus')).toHaveText('Note sent. It will appear here if the songwriter approves it.');
+  await expect(page.locator('#toast')).toHaveText('Note sent. It will appear here if the songwriter approves it.');
   const publicPending = await request.get('/api/feedback?entryId=' + id);
   expect((await publicPending.json()).feedback).toHaveLength(0);
   const queue = (await (await request.get('/api/admin-feedback', { headers: { cookie: sessions.get(request) } })).json()).feedback;
@@ -82,6 +84,8 @@ test('a songwriter publishes, guests share and comment, and approval protects th
   await expect(moderatorPage.locator('#moderationList')).toContainText('Published');
   await moderator.close();
   await page.reload();
+  await page.locator('#feedbackPanel > summary').click();
+  await expect(page.locator('#feedbackCount')).toHaveText('1 approved note');
   await expect(page.locator('#feedbackList')).toContainText('The melody here feels hopeful.');
   await page.getByRole('button', { name: 'Jump to 0:05' }).click();
   await expect(seek).toHaveAttribute('aria-valuenow', '5.00');
@@ -101,7 +105,7 @@ test('a songwriter publishes, guests share and comment, and approval protects th
   await page.getByRole('button', { name: 'Save Changes' }).click();
   await expect(page.locator('#upStatus')).toBeEmpty();
   await expect(page.locator('#view-admin-upload')).toBeVisible();
-  await page.getByRole('button', { name: 'Song library' }).click();
+  await page.getByRole('button', { name: 'Songbook', exact: true }).click();
   await expect(page.locator('#songNoteText')).toHaveText('An edited note from the songwriter.');
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -128,7 +132,8 @@ test('a songwriter publishes, guests share and comment, and approval protects th
   await page.locator('#adminEntryList').getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('button', { name: 'Yes, Continue' }).click();
   await page.getByRole('button', { name: 'Delete Forever' }).click();
-  await expect(page.locator('#adminEntryList')).toContainText('No published entries yet');
+  await expect(page.locator('#adminEntryList')).toContainText('No songs published yet');
+  await expect(page.locator('#archiveSummary')).toHaveText('No songs published yet.');
   expect((await (await request.get('/api/devotionals')).json())).toHaveLength(0);
   await post(request, '/api/admin-maintenance', {});
   await expect.poll(async () => (await request.get(new URL(media.publicUrl).pathname)).status()).toBe(404);
@@ -161,7 +166,9 @@ test('a failed publish keeps the form and reuses uploads on retry, including Uni
   await page.getByLabel('Password', { exact: true }).fill('test-password-only');
   await page.getByRole('button', { name: 'Enter the writing room' }).click();
   await page.getByLabel('Song Title', { exact: true }).fill('Quiet Mercy');
-  await page.getByLabel('Entry Date').fill('2026-10-03');
+  await page.getByLabel('Song Date').fill('2026-10-03');
+  await expect(page.getByLabel('Song details', { exact: true })).toHaveAccessibleDescription('e.g. Psalm 23:2 or C major | 100 BPM');
+  await page.getByLabel('Song details', { exact: true }).fill('Psalm 23:2 | C major | 100 BPM');
   await page.getByLabel('Lyrics', { exact: true }).fill('Verse 1\nA quiet mercy is here.');
   await page.getByLabel('MP3 / Audio File', { exact: true }).setInputFiles({ name: 'Mercy’s 🎵.wav', mimeType: 'audio/wav', buffer: recording() });
   let audioUploads = 0;
@@ -172,6 +179,7 @@ test('a failed publish keeps the form and reuses uploads on retry, including Uni
   await expect(page.getByLabel('Song Title', { exact: true })).toHaveValue('Quiet Mercy');
   await page.unroute('**/api/admin-entry-create');
   await page.getByRole('button', { name: 'Publish Song', exact: true }).click();
+  await expect(page.locator('#toast')).toHaveText('Your song is published and ready to share.');
   await expect(page.getByLabel('Song Title', { exact: true })).toBeEmpty();
   await expect(page.locator('#adminEntryList')).toContainText('Quiet Mercy');
   expect(audioUploads).toBe(1);
@@ -183,9 +191,35 @@ test('the painted journal preserves substantial artwork and usable layouts on na
   expect((await post(request, '/api/admin-login', { password: 'test-password-only' })).status()).toBe(200);
   const upload = await request.post('/api/upload-audio?filename=Painted%20Melodies.wav', { headers: { origin, cookie: sessions.get(request), 'content-type': 'audio/wav' }, data: recording() });
   expect(upload.status()).toBe(200);
-  expect((await post(request, '/api/admin-entry-create', { id: randomUUID(), title: 'Painted Melodies', entry_date: '2026-10-04', lyrics: 'A melody on a new page.', audio_url: (await upload.json()).publicUrl })).status()).toBe(200);
+  const entryId = randomUUID();
+  expect((await post(request, '/api/admin-entry-create', { id: entryId, title: 'Painted Melodies', entry_date: '2026-10-04', lyrics: 'A melody on a new page.', audio_url: (await upload.json()).publicUrl })).status()).toBe(200);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
+  await expect(page.locator('#pTitle')).toHaveText('Painted Melodies');
+  await page.evaluate(() => document.fonts.ready);
+  await expect.poll(() => page.locator('#view-archive').evaluate(element => getComputedStyle(element).opacity)).toBe('1');
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 320, height: 800 }]) {
+    await page.setViewportSize(viewport);
+    const record = await page.locator('.tt-plinth').boundingBox();
+    expect(record.y).toBeGreaterThanOrEqual(10);
+    expect(record.y + record.height + 10).toBeLessThanOrEqual(viewport.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const transport = await page.locator('.transport-row').boundingBox();
+    expect(transport.y + transport.height).toBeLessThanOrEqual(viewport.height);
+    if (viewport.width === 1280 || viewport.width === 390) {
+      await page.screenshot({ path: `test-results/compact-opening-${viewport.width === 1280 ? 'desktop' : 'mobile'}.png` });
+    }
+    if (viewport.width <= 760) {
+      const player = await page.locator('.hero-player').boundingBox();
+      const library = await page.locator('#songbook').boundingBox();
+      expect(library.y - (player.y + player.height)).toBeLessThan(100);
+      await expect(page.locator('.intro-margin')).toBeHidden();
+      const bouquet = await page.locator('.archive-botanical').boundingBox();
+      const songbook = await page.locator('#archiveGrid').boundingBox();
+      expect(bouquet.y).toBeGreaterThanOrEqual(songbook.y + songbook.height);
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const mount = page.locator('.tonearm-pivot');
   await expect(mount).toHaveCSS('background-image', /painted-pivot\.svg/);
   await expect(mount).toHaveCSS('width', '12px');
@@ -196,17 +230,16 @@ test('the painted journal preserves substantial artwork and usable layouts on na
   await page.locator('.tt-scene').screenshot({ path: 'test-results/hand-painted-player.png' });
   await page.screenshot({ path: 'test-results/watercolor-journal-desktop.png' });
   await page.setViewportSize({ width: 320, height: 800 });
-  await expect(page.locator('.intro-margin img')).toBeVisible();
-  expect((await page.locator('.intro-margin img').boundingBox()).width).toBeGreaterThanOrEqual(250);
-  expect((await page.locator('.archive-botanical').boundingBox()).width).toBeGreaterThanOrEqual(220);
+  await expect(page.locator('.archive-botanical')).toBeVisible();
+  expect((await page.locator('.archive-botanical').boundingBox()).width).toBeGreaterThanOrEqual(250);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const controls = await page.locator('.transport-row button').evaluateAll(elements => elements.map(element => {
     const rect = element.getBoundingClientRect();
     return { left: rect.left, right: rect.right, height: rect.height };
   }));
-  expect(controls.every(rect => rect.left >= 0 && rect.right <= 320 && rect.height >= 40)).toBe(true);
+  expect(controls.every(rect => rect.left >= 0 && rect.right <= 320 && rect.height >= 44)).toBe(true);
 
-  await page.getByRole('button', { name: 'Add a listening note' }).click();
+  await page.getByRole('button', { name: /^Leave a note at/ }).click();
   await expect(page.getByLabel('Your listening note')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Lyrics ↗' }).click();
@@ -228,10 +261,16 @@ test('the painted journal preserves substantial artwork and usable layouts on na
   await page.screenshot({ path: 'test-results/watercolor-writing-room-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 320, height: 800 });
   await page.screenshot({ path: 'test-results/mobile-writing-room.png', fullPage: true });
-  await page.getByRole('button', { name: 'Song library' }).click();
+  await page.getByRole('button', { name: 'Songbook', exact: true }).click();
   await expect.poll(() => page.locator('#view-archive').evaluate(element => getComputedStyle(element).opacity)).toBe('1');
   await page.locator('header').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'test-results/mobile-watercolor-journal.png', fullPage: true });
+  await page.goto('/?song=' + entryId);
+  await expect(page.locator('#pTitle')).toHaveText('Painted Melodies');
+  await expect(page.locator('.journal-intro')).toBeHidden();
+  await expect(page.locator('.intro-margin')).toBeHidden();
+  const sharedRecord = await page.locator('.tt-plinth').boundingBox();
+  expect(sharedRecord.y + sharedRecord.height + 10).toBeLessThanOrEqual(800);
 });
 
 test('songbook selection, hover and keyboard focus use distinct petal-blue highlights', async ({ request, page }) => {
@@ -263,4 +302,129 @@ test('songbook selection, hover and keyboard focus use distinct petal-blue highl
   await expect(other).toHaveClass(/now-playing/);
   await expect(selected).not.toHaveClass(/now-playing/);
   await expect(page.locator('#pTitle')).toHaveText('Still and Quiet');
+});
+
+test('scroll-aware controls, timestamped notes and long lyrics stay usable on desktop and mobile', async ({ request, page }) => {
+  expect((await post(request, '/api/admin-login', { password: 'test-password-only' })).status()).toBe(200);
+  const upload = await request.post('/api/upload-audio?filename=Remembered.wav', { headers: { origin, cookie: sessions.get(request), 'content-type': 'audio/wav' }, data: recording() });
+  expect(upload.status()).toBe(200);
+  const id = randomUUID(), silentId = randomUUID(), title = 'He Remembers Me (Psalm 103)';
+  expect((await post(request, '/api/admin-entry-create', { id, title, entry_date: '2026-10-10', scripture: 'C major | 100 BPM', lyrics: Array(50).fill('A melody for the moments we remember.').join('\n'), audio_url: (await upload.json()).publicUrl })).status()).toBe(200);
+  expect((await post(request, '/api/admin-entry-create', { id: silentId, title: 'Lyrics without a recording', entry_date: '2026-10-09', lyrics: 'A new idea on a page.' })).status()).toBe(200);
+  // Enough library rows to scroll past the entire player even when this test runs alone.
+  for (let i = 1; i <= 4; i++) {
+    expect((await post(request, '/api/admin-entry-create', { id: randomUUID(), title: 'A quiet melody ' + i, entry_date: '2026-10-01', lyrics: '' })).status()).toBe(200);
+  }
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/');
+  await expect(page.locator('#pTitle')).toHaveText(title);
+  const songs = await (await request.get('/api/devotionals')).json();
+  await expect(page.locator('#archiveSummary')).toHaveText(songs.length + ' songs');
+  await expect(page.locator('#tTot')).toHaveText('0:36');
+  await page.evaluate(() => document.fonts.ready);
+  await expect.poll(() => page.locator('#view-archive').evaluate(element => getComputedStyle(element).opacity)).toBe('1');
+  const transport = await page.locator('.transport-row').boundingBox();
+  const record = await page.locator('.tt-plinth').boundingBox();
+  const waveform = await page.locator('#waveformSeek').boundingBox();
+  expect(transport.y).toBeGreaterThan(record.y + record.height);
+  expect(transport.y + transport.height).toBeLessThan(waveform.y);
+  expect(transport.y + transport.height).toBeLessThanOrEqual(800);
+  const songTitle = page.locator('#card-' + id + ' .a-title');
+  const titleSize = await songTitle.evaluate(element => ({ height: element.clientHeight, scrollHeight: element.scrollHeight, line: parseFloat(getComputedStyle(element).lineHeight) }));
+  expect(titleSize.height).toBeGreaterThan(titleSize.line);
+  expect(titleSize.scrollHeight).toBeLessThanOrEqual(titleSize.height);
+
+  await page.locator('.playback-settings > summary').click();
+  await page.getByRole('button', { name: '1.25×', exact: true }).click();
+  await expect(page.getByRole('button', { name: '1.25×', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.locator('#audioEl').evaluate(element => element.playbackRate)).toBe(1.25);
+  await page.getByRole('slider', { name: 'Volume', exact: true }).focus();
+  await page.keyboard.press('Home');
+  await expect(page.locator('#volumeReadout')).toHaveText('0%');
+  await page.keyboard.press('End');
+  await expect(page.locator('#volumeReadout')).toHaveText('100%');
+  await page.getByRole('button', { name: 'Mute volume', exact: true }).click();
+  await expect(page.locator('#volumeReadout')).toHaveText('0%');
+  await page.getByRole('button', { name: 'Unmute volume', exact: true }).click();
+  await page.getByTitle('Repeat the current song').click();
+  await expect(page.locator('#loopBtn')).toHaveAttribute('aria-pressed', 'true');
+  const targets = await page.locator('.detail-row button, .song-actions button:not([hidden]), #volumeSlider').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+  expect(targets.every(height => height >= 44)).toBe(true);
+  await page.locator('.playback-settings > summary').click();
+
+  const mainSeek = page.getByRole('slider', { name: 'Song playback position', exact: true });
+  await mainSeek.focus(); await page.keyboard.press('Home'); await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#feedbackPrompt')).toHaveText('Leave a note at 0:05');
+  await page.locator('#feedbackPrompt').click();
+  await expect(page.locator('#feedbackTime')).toHaveText('0:05');
+  await page.getByLabel('Your listening note').fill('Keep this draft and its original moment.');
+  await page.locator('#feedbackPanel > summary').click();
+  await expect(page.locator('#feedbackPrompt')).toHaveAttribute('aria-expanded', 'false');
+  await mainSeek.focus(); await page.keyboard.press('ArrowRight');
+  await page.locator('#feedbackPrompt').click();
+  await expect(page.getByLabel('Your listening note')).toHaveValue('Keep this draft and its original moment.');
+  await expect(page.locator('#feedbackTime')).toHaveText('0:05');
+  await page.getByLabel('Your listening note').fill('');
+  await page.locator('#feedbackPanel > summary').click();
+
+  const mini = page.getByRole('complementary', { name: 'Current song controls' });
+  const miniSeek = mini.getByRole('slider', { name: 'Mini-player playback position' });
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await page.locator('header').evaluate(element => element.scrollIntoView({ behavior: 'instant' }));
+    await expect(mini).toBeHidden();
+    await page.getByRole('button', { name: 'Songbook', exact: true }).click();
+    await expect(mini).toBeVisible();
+    await expect(mini.locator('#miniTitle')).toHaveText(title);
+    expect(await page.locator('audio').count()).toBe(1);
+    const bounds = await mini.boundingBox();
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height);
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
+    await mini.getByRole('button', { name: 'Play current song', exact: true }).click();
+    await expect(mini.getByRole('button', { name: 'Pause current song', exact: true })).toBeVisible();
+    await expect.poll(() => page.locator('#audioEl').evaluate(element => element.currentTime)).toBeGreaterThan(0);
+    await mini.getByRole('button', { name: 'Pause current song', exact: true }).click();
+    const pausedTime = await page.locator('#audioEl').evaluate(element => element.currentTime);
+    await page.waitForTimeout(300);
+    expect(await page.locator('#audioEl').evaluate(element => element.currentTime)).toBe(pausedTime);
+    await miniSeek.focus(); await page.keyboard.press('End');
+    await expect(mainSeek).toHaveAttribute('aria-valuenow', '36.00');
+    await expect(page.locator('#tonearmArm')).toHaveAttribute('style', /36.00deg/);
+    await page.keyboard.press('Home'); await page.keyboard.press('ArrowRight');
+    await expect(mainSeek).toHaveAttribute('aria-valuenow', '0.10');
+    await page.screenshot({ path: `test-results/mini-player-${viewport.width === 390 ? 'mobile' : 'desktop'}.png` });
+    await mini.locator('#miniTitle').click();
+    await expect(mini).toBeHidden();
+    await expect(page.locator('#playBtn')).toBeFocused();
+    await page.getByRole('button', { name: 'Lyrics ↗', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: title });
+    await dialog.evaluate(element => { element.scrollTop = element.scrollHeight; });
+    const close = dialog.getByRole('button', { name: 'Close lyrics' });
+    const closeBounds = await close.boundingBox(), dialogBounds = await dialog.boundingBox();
+    expect(closeBounds.y).toBeGreaterThanOrEqual(dialogBounds.y);
+    expect(closeBounds.y + closeBounds.height).toBeLessThanOrEqual(viewport.height);
+    expect(closeBounds.height).toBeGreaterThanOrEqual(44);
+    await expect(mini).toBeHidden();
+    await expect(page.locator('#miniPlayer')).toHaveJSProperty('inert', true);
+    await page.screenshot({ path: `test-results/lyrics-scrolled-${viewport.width === 390 ? 'mobile' : 'desktop'}.png` });
+    await close.click();
+    await expect(dialog).toBeHidden();
+    await expect(page.locator('[data-action="lyrics"]')).toBeFocused();
+  }
+  await page.getByRole('button', { name: 'Songbook', exact: true }).click();
+  await expect(mini).toBeVisible();
+  await page.getByRole('button', { name: 'Songwriter login', exact: true }).click();
+  await expect(mini).toBeHidden();
+  await page.goto('/?song=' + silentId);
+  await page.getByRole('button', { name: 'Songbook', exact: true }).click();
+  await expect(page.locator('#playerStatus')).toContainText('No recording');
+  await expect(mini).toBeHidden();
+  await page.route('**/api/feedback?*', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"service-unavailable"}' }));
+  await page.reload();
+  await expect(page.locator('#feedbackCount')).toHaveText('Could not load notes');
+  await page.locator('#feedbackPanel > summary').click();
+  await page.unroute('**/api/feedback?*');
+  await page.locator('#feedbackList').getByRole('button', { name: 'Try again' }).click();
+  await expect(page.locator('#feedbackCount')).toHaveText('No notes yet');
 });

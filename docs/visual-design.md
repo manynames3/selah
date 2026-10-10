@@ -8,7 +8,7 @@ The interface should resemble ink and watercolor on tactile artist rag paper rat
 - The page background uses only very pale grey-sage pigment over warm natural-white paper. Butter-yellow, coral and sky-blue remain localized to the botanical artwork rather than competing across the whole page. Controls keep clear outlines, readable labels and distinct focus states.
 - Songbook selection and hover borrow the muted blue of the botanical flower petals. Selection uses a deeper paper-blended blue wash, a colored edge and a matching status badge; hover and keyboard focus use a lighter tint. The rest of the interface palette stays unchanged.
 - The record uses a hand-painted image, but its rotation, album artwork, needle pivot and 9-to-36-degree playback tracking remain real interface elements.
-- Botanical illustrations and small musical sketches appear at meaningful sizes. One bouquet introduces the desktop journal; on mobile and shared-song links, a full-size bouquet closes the library instead of repeating it between the player and song list.
+- Botanical illustrations and small musical sketches appear at meaningful sizes. A single full-size bouquet and handwritten caption close the songbook on desktop, mobile and shared-song links, leaving the opening focused on listening.
 - Decoration is non-interactive, has empty alternative text or is hidden from assistive technology, and never changes the waveform's real sample data or seek hit area.
 
 ## Original Assets

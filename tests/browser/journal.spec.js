@@ -206,6 +206,15 @@ test('the painted journal preserves substantial artwork and usable layouts on na
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const transport = await page.locator('.transport-row').boundingBox();
     expect(transport.y + transport.height).toBeLessThanOrEqual(viewport.height);
+    await expect(page.locator('.intro-margin')).toHaveCount(0);
+    await expect(page.locator('.songbook-flourish')).toHaveCount(1);
+    await expect(page.locator('.songbook-flourish')).toContainText('made with a little faith');
+    await expect(page.locator('.songbook-flourish')).toContainText('& a lot of heart');
+    await expect(page.locator('.archive-botanical')).toBeVisible();
+    const bouquet = await page.locator('.archive-botanical').boundingBox();
+    const songbook = await page.locator('#archiveGrid').boundingBox();
+    expect(bouquet.width).toBeGreaterThanOrEqual(250);
+    expect(bouquet.y).toBeGreaterThanOrEqual(songbook.y + songbook.height);
     if (viewport.width === 1280 || viewport.width === 390) {
       await page.screenshot({ path: `test-results/compact-opening-${viewport.width === 1280 ? 'desktop' : 'mobile'}.png` });
     }
@@ -213,10 +222,6 @@ test('the painted journal preserves substantial artwork and usable layouts on na
       const player = await page.locator('.hero-player').boundingBox();
       const library = await page.locator('#songbook').boundingBox();
       expect(library.y - (player.y + player.height)).toBeLessThan(100);
-      await expect(page.locator('.intro-margin')).toBeHidden();
-      const bouquet = await page.locator('.archive-botanical').boundingBox();
-      const songbook = await page.locator('#archiveGrid').boundingBox();
-      expect(bouquet.y).toBeGreaterThanOrEqual(songbook.y + songbook.height);
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -228,7 +233,7 @@ test('the painted journal preserves substantial artwork and usable layouts on na
   await expect(mount).toHaveCSS('right', '6px');
   await expect(page.locator('#tonearmArm')).toHaveCSS('transform-origin', '2px 6px');
   await page.locator('.tt-scene').screenshot({ path: 'test-results/hand-painted-player.png' });
-  await page.screenshot({ path: 'test-results/watercolor-journal-desktop.png' });
+  await page.screenshot({ path: 'test-results/watercolor-journal-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 320, height: 800 });
   await expect(page.locator('.archive-botanical')).toBeVisible();
   expect((await page.locator('.archive-botanical').boundingBox()).width).toBeGreaterThanOrEqual(250);
@@ -268,7 +273,7 @@ test('the painted journal preserves substantial artwork and usable layouts on na
   await page.goto('/?song=' + entryId);
   await expect(page.locator('#pTitle')).toHaveText('Painted Melodies');
   await expect(page.locator('.journal-intro')).toBeHidden();
-  await expect(page.locator('.intro-margin')).toBeHidden();
+  await expect(page.locator('.intro-margin')).toHaveCount(0);
   const sharedRecord = await page.locator('.tt-plinth').boundingBox();
   expect(sharedRecord.y + sharedRecord.height + 10).toBeLessThanOrEqual(800);
 });
